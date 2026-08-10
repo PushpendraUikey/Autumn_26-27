@@ -65,6 +65,9 @@ bool Shape::operator==(const IGraphic& other) const {
     return otherShape && (this->sides == otherShape->sides);
 }
 
+/*
+For this runtime destructor to work we must have a Virtual Destructor in the base class.
+*/
 Dialog::~Dialog() {
     for (IGraphic* graphic : _graphics) {
         delete graphic;
