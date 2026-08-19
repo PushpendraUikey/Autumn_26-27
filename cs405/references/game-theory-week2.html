@@ -1,0 +1,925 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Game Theory Lab — Week 2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink: #0E1420;
+    --ink-2: #131A29;
+    --panel: #171F30;
+    --panel-2: #1D2740;
+    --line: #2A3450;
+    --paper: #EDE7D9;
+    --text: #D9DCE4;
+    --text-dim: #8993AA;
+    --gold: #C9A24B;
+    --gold-dim: #8E7638;
+    --teal: #4FA9A1;
+    --red: #C1594B;
+    --radius: 10px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background: var(--ink);
+    color: var(--text);
+    font-family: 'IBM Plex Sans', sans-serif;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  ::selection{ background: var(--gold); color: #14100a; }
+  h1,h2,h3,h4{ font-family:'Fraunces', serif; font-weight:600; color: var(--paper); margin:0; }
+  a{ color: var(--gold); }
+  .mono{ font-family:'IBM Plex Mono', monospace; }
+
+  /* ---------- layout shell ---------- */
+  #app{ display:flex; min-height:100vh; }
+  .sidebar{
+    width: 272px;
+    flex-shrink:0;
+    background: var(--ink-2);
+    border-right: 1px solid var(--line);
+    padding: 28px 18px 24px;
+    position: sticky; top:0; height:100vh; overflow-y:auto;
+  }
+  .brand{ padding: 0 10px 22px; border-bottom:1px solid var(--line); margin-bottom:18px; }
+  .brand .eyebrow{ font-family:'IBM Plex Mono'; font-size:11px; letter-spacing:.14em; text-transform:uppercase; color: var(--gold); }
+  .brand h1{ font-size: 21px; margin-top:6px; line-height:1.25; }
+  .brand p{ color:var(--text-dim); font-size:12.5px; margin-top:8px; }
+
+  nav.concepts{ display:flex; flex-direction:column; gap:3px; }
+  .nav-item{
+    display:flex; align-items:center; gap:12px;
+    padding:10px 10px; border-radius: var(--radius);
+    cursor:pointer; border:1px solid transparent;
+    transition: background .15s ease, border-color .15s ease;
+  }
+  .nav-item:hover{ background: var(--panel); }
+  .nav-item.active{ background: var(--panel-2); border-color: var(--line); }
+  .nav-num{
+    font-family:'IBM Plex Mono'; font-size:12px; color: var(--text-dim);
+    width:22px; text-align:right; flex-shrink:0;
+  }
+  .nav-item.active .nav-num{ color: var(--gold); }
+  .nav-label{ font-size: 13.5px; color: var(--text); flex:1; }
+  .nav-item.active .nav-label{ color: var(--paper); font-weight:500; }
+  .nav-dot{
+    width:8px; height:8px; border-radius:50%; flex-shrink:0;
+    background: var(--line); border: 1px solid var(--line);
+  }
+  .nav-dot.done{ background: var(--gold); border-color: var(--gold); }
+  .nav-dot.partial{ background: transparent; border-color: var(--gold); }
+
+  .progress-summary{
+    margin-top: 20px; padding: 14px 12px; border-radius: var(--radius);
+    background: var(--panel); border:1px solid var(--line);
+  }
+  .progress-summary .lbl{ font-size:11px; text-transform:uppercase; letter-spacing:.1em; color:var(--text-dim); font-family:'IBM Plex Mono'; }
+  .progress-bar{ height:6px; border-radius:4px; background: var(--ink); margin-top:9px; overflow:hidden; }
+  .progress-fill{ height:100%; background: linear-gradient(90deg, var(--gold-dim), var(--gold)); transition: width .4s ease; }
+  .progress-summary .num{ margin-top:8px; font-family:'IBM Plex Mono'; font-size:12.5px; color: var(--paper); }
+
+  main{ flex:1; min-width:0; }
+
+  /* ---------- hero ---------- */
+  .hero{
+    padding: 56px 48px 44px;
+    border-bottom: 1px solid var(--line);
+    background:
+      radial-gradient(ellipse at 85% -10%, rgba(201,162,75,0.10), transparent 55%),
+      var(--ink);
+    display:flex; gap: 48px; align-items:center; flex-wrap:wrap;
+  }
+  .hero-text{ flex: 1 1 380px; min-width: 300px; }
+  .hero-text .eyebrow{ font-family:'IBM Plex Mono'; color: var(--teal); font-size:12px; letter-spacing:.14em; text-transform:uppercase; }
+  .hero-text h1{ font-size: clamp(30px, 4vw, 44px); margin-top: 10px; line-height:1.08; }
+  .hero-text p{ color: var(--text-dim); font-size:15px; margin-top:16px; max-width:46ch; }
+  .hero-widget{ flex: 1 1 340px; min-width:300px; }
+  .hero-widget-label{ font-family:'IBM Plex Mono'; font-size:11.5px; color:var(--text-dim); margin-bottom:10px; }
+
+  /* ---------- board / matrix widget ---------- */
+  .board-wrap{ display:flex; justify-content:center; }
+  table.board{
+    border-collapse: collapse;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    overflow:hidden;
+  }
+  table.board th, table.board td{
+    border: 1px solid var(--line);
+    padding: 12px 16px;
+    text-align:center;
+    font-family:'IBM Plex Mono';
+    font-size: 13.5px;
+    min-width: 64px;
+  }
+  table.board th{
+    background: var(--ink-2);
+    color: var(--text-dim);
+    font-weight:600;
+    font-size:12px;
+  }
+  table.board th.corner{ background: var(--ink-2); }
+  table.board .rowlabel{ background: var(--ink-2); color: var(--text-dim); font-weight:600; }
+  table.board .axis-label{ background: var(--ink-2); color: var(--gold); font-size:10.5px; letter-spacing:.08em; text-transform:uppercase; }
+  table.board td.cell{
+    color: var(--text); cursor: pointer; transition: background .15s ease, box-shadow .15s;
+    user-select:none;
+  }
+  table.board td.cell:hover{ background: rgba(201,162,75,0.10); }
+  table.board td.cell.br-row{ box-shadow: inset 0 0 0 2px var(--teal); }
+  table.board td.cell.br-col{ box-shadow: inset 0 0 0 2px var(--red); }
+  table.board td.cell.eq{ background: rgba(201,162,75,0.16); box-shadow: inset 0 0 0 2px var(--gold); color: var(--paper); font-weight:600; }
+  .board-caption{ text-align:center; color: var(--text-dim); font-size:12px; margin-top:12px; max-width:340px; margin-left:auto; margin-right:auto;}
+  .legend{ display:flex; gap:16px; justify-content:center; margin-top:10px; flex-wrap:wrap;}
+  .legend span{ font-size:11px; color:var(--text-dim); display:flex; align-items:center; gap:6px; font-family:'IBM Plex Mono';}
+  .legend i{ width:10px; height:10px; border-radius:2px; display:inline-block; }
+
+  /* ---------- content ---------- */
+  .content{ padding: 40px 48px 90px; max-width: 880px; }
+  .concept-head{ margin-bottom: 26px; }
+  .concept-head .eyebrow{ font-family:'IBM Plex Mono'; color: var(--gold); font-size:12px; letter-spacing:.12em; text-transform:uppercase; }
+  .concept-head h2{ font-size: 30px; margin-top:8px; }
+  .concept-head .tagline{ color: var(--text-dim); margin-top:8px; font-size:14.5px; }
+
+  .card{
+    background: var(--panel); border:1px solid var(--line); border-radius: var(--radius);
+    padding: 22px 24px; margin-bottom: 20px;
+  }
+  .card h3{ font-size:16px; color: var(--paper); margin-bottom:10px; display:flex; align-items:center; gap:8px;}
+  .card h3 .tag{ font-family:'IBM Plex Mono'; font-size:10px; text-transform:uppercase; letter-spacing:.08em; color: var(--ink); background: var(--gold); padding:2px 7px; border-radius:4px; }
+  .card p{ font-size:14.5px; color: var(--text); margin: 0 0 10px; }
+  .card ul{ margin: 8px 0 0; padding-left: 20px; }
+  .card li{ font-size:14px; color: var(--text); margin-bottom:6px; }
+  .notation-list{ display:flex; flex-direction:column; gap:6px; margin-top:6px;}
+  .notation-list .row{ display:flex; gap:10px; font-size:13.5px; }
+  .notation-list .sym{ font-family:'IBM Plex Mono'; color: var(--gold); min-width: 130px; flex-shrink:0; }
+  .notation-list .desc{ color: var(--text-dim); }
+
+  .theorem-box{
+    border-left: 3px solid var(--teal); padding: 4px 0 4px 16px; margin: 14px 0;
+  }
+  .theorem-box .lbl{ font-family:'IBM Plex Mono'; font-size:11px; text-transform:uppercase; letter-spacing:.08em; color: var(--teal); }
+  .theorem-box p{ margin-top:6px; }
+
+  .example-toggle{
+    display:inline-flex; align-items:center; gap:8px; cursor:pointer;
+    font-family:'IBM Plex Mono'; font-size:12.5px; color: var(--gold);
+    padding: 7px 12px; border:1px solid var(--gold-dim); border-radius: 20px;
+    margin-top: 4px; background: transparent; transition: background .15s;
+  }
+  .example-toggle:hover{ background: rgba(201,162,75,0.08); }
+  .example-body{ margin-top:16px; display:none; }
+  .example-body.open{ display:block; }
+
+  /* ---------- quiz ---------- */
+  .quiz-card{ background: var(--panel); border:1px solid var(--line); border-radius: var(--radius); padding: 22px 24px; }
+  .quiz-head{ display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom: 18px; }
+  .level-tabs{ display:flex; gap:6px; background: var(--ink-2); padding:4px; border-radius: 24px; border:1px solid var(--line); }
+  .level-tab{
+    font-family:'IBM Plex Mono'; font-size:11.5px; padding: 7px 14px; border-radius:20px;
+    cursor:pointer; color: var(--text-dim); text-transform:uppercase; letter-spacing:.04em;
+    transition: background .15s, color .15s;
+  }
+  .level-tab.active{ background: var(--gold); color: #14100a; font-weight:600; }
+  .level-tab .dot{ display:inline-block; width:6px; height:6px; border-radius:50%; margin-right:6px; }
+  .quiz-score{ font-family:'IBM Plex Mono'; font-size:12.5px; color: var(--text-dim); }
+  .quiz-score b{ color: var(--paper); }
+
+  .q-progress{ display:flex; gap:5px; margin-bottom:16px; }
+  .q-progress span{ height:4px; flex:1; background: var(--ink-2); border-radius:3px; overflow:hidden; }
+  .q-progress span i{ display:block; height:100%; width:0%; background: var(--text-dim); }
+  .q-progress span.answered i{ width:100%; background: var(--text-dim); }
+  .q-progress span.correct i{ background: var(--teal); }
+  .q-progress span.wrong i{ background: var(--red); }
+
+  .q-text{ font-size: 15.5px; color: var(--paper); margin-bottom: 16px; line-height:1.5; }
+  .q-options{ display:flex; flex-direction:column; gap:9px; }
+  .opt{
+    display:flex; gap:12px; align-items:flex-start;
+    padding: 12px 14px; border-radius: 8px; border: 1px solid var(--line);
+    background: var(--ink-2); cursor:pointer; font-size: 14px; color: var(--text);
+    transition: border-color .15s, background .15s;
+  }
+  .opt:hover{ border-color: var(--gold-dim); }
+  .opt .letter{
+    font-family:'IBM Plex Mono'; font-size:12px; color: var(--text-dim);
+    width:20px; height:20px; border-radius:50%; border:1px solid var(--line);
+    display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  }
+  .opt.selected{ border-color: var(--gold); }
+  .opt.correct{ border-color: var(--teal); background: rgba(79,169,161,0.10); }
+  .opt.correct .letter{ background: var(--teal); color:#0b1a18; border-color: var(--teal); }
+  .opt.incorrect{ border-color: var(--red); background: rgba(193,89,75,0.10); }
+  .opt.incorrect .letter{ background: var(--red); color:#1e0e0b; border-color: var(--red); }
+  .opt.disabled{ cursor: default; }
+
+  .feedback{ margin-top:14px; padding: 13px 15px; border-radius: 8px; font-size:13.5px; display:none; }
+  .feedback.show{ display:block; }
+  .feedback.ok{ background: rgba(79,169,161,0.10); border:1px solid var(--teal); color: var(--text); }
+  .feedback.no{ background: rgba(193,89,75,0.10); border:1px solid var(--red); color: var(--text); }
+  .feedback .fb-lbl{ font-family:'IBM Plex Mono'; text-transform:uppercase; font-size:11px; letter-spacing:.08em; margin-bottom:5px; display:block;}
+  .feedback.ok .fb-lbl{ color: var(--teal); }
+  .feedback.no .fb-lbl{ color: var(--red); }
+
+  .quiz-nav{ display:flex; justify-content: space-between; margin-top:18px; }
+  .btn{
+    font-family:'IBM Plex Sans'; font-size: 13px; font-weight:600; padding: 10px 18px;
+    border-radius: 22px; border: 1px solid var(--gold); background: transparent; color: var(--gold);
+    cursor:pointer; transition: background .15s, color .15s;
+  }
+  .btn:hover:not(:disabled){ background: var(--gold); color:#14100a; }
+  .btn:disabled{ opacity:.35; cursor:not-allowed; }
+  .btn.primary{ background: var(--gold); color:#14100a; }
+  .btn.primary:hover:not(:disabled){ background: var(--gold-dim); }
+  .btn.ghost{ border-color: var(--line); color: var(--text-dim); }
+
+  .quiz-done{ text-align:center; padding: 20px 10px; }
+  .quiz-done h4{ font-size:18px; margin-bottom:8px; }
+  .quiz-done p{ color: var(--text-dim); font-size:13.5px; }
+
+  .concept-footnav{ display:flex; justify-content:space-between; margin-top: 34px; padding-top:22px; border-top:1px solid var(--line); }
+  .footnav-btn{ display:flex; flex-direction:column; gap:4px; cursor:pointer; max-width:260px; }
+  .footnav-btn .k{ font-family:'IBM Plex Mono'; font-size:10.5px; text-transform:uppercase; letter-spacing:.1em; color: var(--text-dim);}
+  .footnav-btn .v{ color: var(--paper); font-size:14px; font-family:'Fraunces'; }
+  .footnav-btn.right{ text-align:right; align-items:flex-end; margin-left:auto; }
+
+  /* mobile */
+  .menu-toggle{ display:none; }
+  @media (max-width: 860px){
+    #app{ flex-direction:column; }
+    .sidebar{ position: relative; width:100%; height:auto; max-height: none; border-right:none; border-bottom:1px solid var(--line); }
+    nav.concepts{ display: none; flex-direction:column; }
+    nav.concepts.open{ display:flex; }
+    .menu-toggle{
+      display:flex; align-items:center; justify-content:space-between; cursor:pointer;
+      padding:10px 10px; background: var(--panel); border-radius: var(--radius); border:1px solid var(--line);
+      font-family:'IBM Plex Mono'; font-size:12px; color: var(--paper);
+    }
+    .hero{ padding: 36px 22px; }
+    .content{ padding: 30px 20px 70px; }
+  }
+  @media (max-width: 480px){
+    table.board th, table.board td{ padding:8px 10px; font-size:12px; min-width:48px; }
+  }
+
+  :focus-visible{ outline: 2px solid var(--gold); outline-offset: 2px; }
+</style>
+</head>
+<body>
+<div id="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="eyebrow">CS 6001 · Week 2</div>
+      <h1>Game Theory Lab</h1>
+      <p>Formal games, dominance, equilibrium &amp; security — worked through, then tested at three levels.</p>
+    </div>
+
+    <div class="menu-toggle" id="menuToggle">
+      <span id="menuToggleLabel">Browse concepts</span>
+      <span>&#9662;</span>
+    </div>
+
+    <nav class="concepts" id="conceptNav"></nav>
+
+    <div class="progress-summary">
+      <div class="lbl">Overall progress</div>
+      <div class="progress-bar"><div class="progress-fill" id="overallFill" style="width:0%"></div></div>
+      <div class="num" id="overallNum">0 / 0 questions correct</div>
+    </div>
+  </aside>
+
+  <main>
+    <section class="hero">
+      <div class="hero-text">
+        <div class="eyebrow">Interactive strategy board</div>
+        <h1>Learn game theory<br>by playing the board.</h1>
+        <p>This module walks through Week 2 — normal form games, dominance, Nash equilibrium, max-min security, iterated elimination, and matrix games — with the same payoff-matrix language your slides use. Click cells below to see best responses; scroll down for the full lesson.</p>
+      </div>
+      <div class="hero-widget">
+        <div class="hero-widget-label">▸ Football-or-Cricket coordination game — click a cell to check for a Nash equilibrium</div>
+        <div class="board-wrap"><div id="heroBoard"></div></div>
+        <div class="legend">
+          <span><i style="background:var(--teal)"></i>Friend 1's best response</span>
+          <span><i style="background:var(--red)"></i>Friend 2's best response</span>
+          <span><i style="background:var(--gold)"></i>Nash equilibrium (both agree)</span>
+        </div>
+        <p class="board-caption" id="heroCaption">Payoffs are (Friend 1, Friend 2). Click any cell to test it for equilibrium.</p>
+      </div>
+    </section>
+
+    <div class="content" id="content"></div>
+  </main>
+</div>
+
+<script>
+/* =========================================================
+   DATA
+   ========================================================= */
+const CONCEPTS = [
+{
+  id:'nfg', num:'01', short:'Normal Form Games',
+  tagline:'How to write down a one-shot strategic situation',
+  explain:[
+    "A normal-form game is the standard way to describe a static, simultaneous-move strategic situation — one where every player picks an action at the same time, without seeing anyone else's choice first.",
+    "Formally it's a triple &lang;N, (S_i)<sub>i&isin;N</sub>, (u_i)<sub>i&isin;N</sub>&rang;: a set of players N, a strategy set S_i for each player, and a utility (payoff) function u_i that maps every possible combination of everyone's choices to a real number for player i. If S_i is finite for all i &isin; N, this is called a <b>finite game</b>."
+  ],
+  notation:[
+    ['N = {1, 2, ..., n}', 'the set of players'],
+    ['S_i', "player i's set of available strategies, s_i ∈ S_i"],
+    ['S = ×_i S_i', 'the set of all strategy profiles (one choice per player)'],
+    ['s = (s_1, ..., s_n)', 'a strategy profile — one full outcome of choices'],
+    ['s_{-i}', "everyone's choices except player i's"],
+    ['u_i : S → ℝ', "player i's payoff, defined on full strategy profiles"]
+  ],
+  exampleTitle:'Worked example — Penalty Shootout',
+  exampleBody:`<p>Shooter and Goalkeeper each simultaneously pick a direction, L / C / R. The shooter scores (+1) whenever the directions <em>differ</em>, and is stopped (−1) when they <em>match</em>. The goalkeeper's payoff is always the exact negative — a zero-sum matching game.</p>`,
+  board:{ rowP:'Shooter', colP:'Goalkeeper', rows:['L','C','R'], cols:['L','C','R'],
+    payoffs:[[[-1,1],[1,-1],[1,-1]],[[1,-1],[-1,1],[1,-1]],[[1,-1],[1,-1],[-1,1]]] },
+  quiz:{
+    basic:[
+      {q:"In the tuple ⟨N, (S_i), (u_i)⟩, what does S_i represent?", opts:["Player i's payoff values","The set of strategies available to player i","The total number of players","The final outcome of the game"], correct:1,
+       exp:"S_i is player i's strategy set — the menu of actions that player i could choose from."},
+      {q:"Normal form is especially well-suited to represent...", opts:["Repeated games played over many rounds with memory","Static, simultaneous, one-shot games","Only games with two players","Only games with continuous-time decisions"], correct:1,
+       exp:"Normal form captures a single round of simultaneous choices — it's the natural fit for static, one-shot interactions."}
+    ],
+    intermediate:[
+      {q:"Player i has 3 strategies and player j has 4 strategies, and they are the only two players. How many strategy profiles are in S = S_i × S_j?", opts:["7","12","3","4"], correct:1,
+       exp:"S is the Cartesian product of the strategy sets, so |S| = 3 × 4 = 12 profiles."},
+      {q:"What exactly does s_{-i} denote?", opts:["Player i's own strategy","The strategy profile of every player except i","Player i's payoff function","The best strategy for player i"], correct:1,
+       exp:"The '−i' subscript is standard game-theory shorthand for 'everyone but player i'."}
+    ],
+    advanced:[
+      {q:"In the Shooter–Goalkeeper example, u1(X,X) = −1 and u2(X,X) = 1 whenever both pick the same direction X. What property does this illustrate?", opts:["A dominant strategy","That u1 + u2 ≡ 0 — the game is zero-sum","A Nash equilibrium","Weak dominance"], correct:1,
+       exp:"Whatever the shooter loses, the goalkeeper gains exactly — the payoffs always sum to zero, the defining property of a zero-sum game."},
+      {q:"Why can't a negotiation played over several rounds, where each side reacts to what happened earlier, be faithfully captured by a single normal-form representation?", opts:["Normal form only supports two players","Normal form models one simultaneous decision per player, not a sequence of decisions conditioned on history","Normal form doesn't allow numeric payoffs","Normal form requires infinite strategy sets"], correct:1,
+       exp:"Normal form has no built-in notion of timing, observation, or history — each player picks exactly once. Sequential, history-dependent play needs an extensive-form model instead."}
+    ]
+  }
+},
+{
+  id:'dominance', num:'02', short:'Dominance',
+  tagline:'When one strategy is simply better than another',
+  explain:[
+    "Holding the other players' choices fixed, we can compare two of a player's own strategies directly. Strategy s_i <b>strictly dominates</b> s_i′ if it earns a strictly higher payoff against <i>every</i> possible s_{-i}. It <b>weakly dominates</b> s_i′ if it's never worse, and strictly better against at least one s_{-i}.",
+    "A strategy that is dominated is one a rational player has no reason to keep: something else does at least as well, always. A <b>dominant strategy</b> is the strongest case — one that dominates <i>every</i> other strategy available to that player, making it the unconditionally best choice no matter what anyone else does."
+  ],
+  notation:[
+    ['s_i strictly dominates s_i′', "u_i(s_i, s_{-i}) > u_i(s_i′, s_{-i}) for all s_{-i}"],
+    ['s_i weakly dominates s_i′', "u_i(s_i, s_{-i}) ≥ u_i(s_i′, s_{-i}) for all s_{-i}, with > for some s_{-i}"],
+    ['s̃_{-i} = s̃_{-i}(s_i, s_i′)', "the specific opposing profile where strict inequality holds depends on the pair of strategies being compared"],
+    ['dominant strategy', "a strategy that dominates every s_i′ ∈ S_i \\ {s_i}"],
+    ['(S)DSE / (W)DSE', 'a profile where every player plays a (strictly/weakly) dominant strategy']
+  ],
+  exampleTitle:'Worked examples — kingdoms, auctions, and when dominance fails',
+  exampleBody:`<p><b>Neighboring Kingdoms' Dilemma</b> (a prisoner's-dilemma-style game): each kingdom chooses Agriculture or War. War strictly dominates Agriculture for both kingdoms individually — even though mutual Agriculture would leave both better off. Dominance describes what a rational, self-interested player does, not what's jointly best.</p>
+  <p><b>Second-price auction formalization:</b> Two players value an item at v_1 and v_2, and choose bids in [0, M]. Player 1's utility is v_1 - s_2 if s_1 &ge; s_2, and 0 otherwise. Player 2's utility is v_2 - s_1 if s_1 < s_2, and 0 otherwise. Bidding your true value (s_i = v_i) is a <i>weakly</i> dominant strategy.</p>
+  <p><b>Existence isn't guaranteed:</b> coordination games like "Football or Cricket" have no dominant strategy for either player at all — what's best for you depends entirely on what your friend picks.</p>`,
+  board:{ rowP:'Player 1', colP:'Player 2', rows:['U','D'], cols:['L','C','R'],
+    payoffs:[[[1,0],[1,3],[3,2]],[[-1,6],[0,5],[3,3]]] },
+  boardCaption:"R is strictly dominated by C for Player 2. D is weakly dominated by U for Player 1.",
+  quiz:{
+    basic:[
+      {q:"Strategy A strictly dominates strategy B for player i means...", opts:["A gives a strictly higher payoff than B against every possible profile of the other players","A is simply player i's favorite strategy","A and B always give the same payoff","B is never chosen by any player"], correct:0,
+       exp:"Strict dominance is a universal comparison — better in every case, not just on average or in some cases."},
+      {q:"A dominant strategy is one that...", opts:["Is chosen most often in practice","Dominates every other strategy available to that player","Gives the highest payoff in the game overall","Only exists in zero-sum games"], correct:1,
+       exp:"Dominant means it beats (or ties, for weak dominance) all of the player's own alternative strategies, regardless of what others do."}
+    ],
+    intermediate:[
+      {q:"Payoffs (row, col): Up = (4,2) at Left, (2,1) at Right; Down = (1,0) at Left, (0,3) at Right. Which strategy is strictly dominated for Player 1?", opts:["Up","Down","Left","Right"], correct:1,
+       exp:"Compare Player 1's own payoffs: Up gives 4>1 at Left and 2>0 at Right — Up strictly dominates Down, so Down is the dominated strategy."},
+      {q:"In the Neighboring Kingdoms' Dilemma, why is War dominant even though mutual Agriculture is better for both sides jointly?", opts:["War gives a strictly higher payoff regardless of the other kingdom's choice, even though the joint outcome isn't optimal","War is dominant only because it's listed first","Agriculture is actually the dominant strategy, not War","Dominance requires the outcome to be jointly optimal"], correct:0,
+       exp:"Dominance is a purely individual, self-interested comparison — it says nothing about what's best for the group, which is exactly why dilemmas like this exist."}
+    ],
+    advanced:[
+      {q:"Why is truthful bidding only weakly (not strictly) dominant in a second-price auction?", opts:["Because truthful bidding is illegal in some auctions","Because in some cases (e.g., ties, or bids below the second-highest bid that don't change who wins) truthful bidding ties rather than strictly beats another bid","Because second-price auctions have no dominant strategy at all","Because the auctioneer sets the price, not the bidder"], correct:1,
+       exp:"Weak dominance allows ties. There exist opposing bid profiles where deviating from your true value doesn't change your payoff — so it's never worse, but not always strictly better."},
+      {q:"The Football-or-Cricket game has no dominant strategy for either player. What does this imply about relying on dominance alone to predict outcomes?", opts:["It implies the game has no solution at all","Dominance alone can't explain every game's outcome — richer solution concepts like Nash equilibrium are needed", "It implies both players are irrational", "It implies the game isn't in normal form"], correct:1,
+       exp:"Dominance is powerful when it applies, but many realistic games (coordination problems especially) have no dominant strategies, which is exactly the motivation for the next concept: Nash equilibrium."}
+    ]
+  }
+},
+{
+  id:'nash', num:'03', short:'Nash Equilibrium',
+  tagline:'Stability: nobody wants to switch alone',
+  explain:[
+    "A <b>pure-strategy Nash equilibrium (PSNE)</b> is a strategy profile where no single player can gain by unilaterally switching their own strategy, holding everyone else fixed. It's a weaker, more broadly applicable idea than dominance — it doesn't require a strategy to be best against <i>everything</i>, only best against what's actually being played.",
+    "The <b>best-response view</b> makes this precise: B_i(s_{-i}) is the set of strategies that maximize player i's payoff given the others' choices. A PSNE is exactly a profile where every player's strategy lies in their own best-response set. This gives a clean chain of implication: a strictly dominant strategy equilibrium is always a weakly dominant strategy equilibrium, which is always a PSNE — but not the other way around."
+  ],
+  notation:[
+    ['B_i(s_{-i})', "{s_i ∈ S_i : u_i(s_i, s_{-i}) ≥ u_i(s_i′, s_{-i}) ∀s_i′} — i's best responses"],
+    ['PSNE condition', "s_i* ∈ B_i(s_{-i}*) for every player i"],
+    ['implication chain', 'SDSE ⇒ WDSE ⇒ PSNE (never reversible)']
+  ],
+  exampleTitle:'Worked example — Football or Cricket',
+  exampleBody:`<p>Two friends independently pick an activity. Matching gives both a positive payoff; mismatching gives 0 to both. Here, <b>both</b> (Football,Football) and (Cricket,Cricket) are PSNE — in either one, neither friend wants to unilaterally switch, even though neither strategy is dominant on its own.</p>`,
+  board:{ rowP:'Friend 1', colP:'Friend 2', rows:['Football','Cricket'], cols:['Football','Cricket'],
+    payoffs:[[[2,1],[0,0]],[[0,0],[1,2]]] },
+  boardCaption:"Use the hero board above (or this one) — both matching cells are Nash equilibria.",
+  quiz:{
+    basic:[
+      {q:"A PSNE is a strategy profile where...", opts:["Every player earns the maximum possible payoff in the game","No player can improve their own payoff by unilaterally changing only their own strategy","All players choose the same strategy","Payoffs sum to zero"], correct:1,
+       exp:"Nash equilibrium is about unilateral deviation specifically — one player changing their mind while everyone else stays put."},
+      {q:"What does B_i(s_{-i}) represent?", opts:["Player i's worst possible payoff","The set of player i's strategies that maximize i's payoff given the others' strategies","The set of all strategy profiles in the game","Player i's dominant strategy, if one exists"], correct:1,
+       exp:"It's literally player i's best-response correspondence: the optimal reply to a fixed choice by everyone else."}
+    ],
+    intermediate:[
+      {q:"Football/Cricket payoffs: (F,F)=(2,1), (F,C)=(0,0), (C,F)=(0,0), (C,C)=(1,2). Which profiles are PSNE?", opts:["Only (F,F)","Only (C,C)","Both (F,F) and (C,C)","No PSNE exists"], correct:2,
+       exp:"At (F,F): Friend 1 deviating to C gets 0 < 2, Friend 2 deviating to C gets 0 < 1 — nobody deviates. Same logic holds at (C,C). Both are equilibria."},
+      {q:"Which statement about the SDSE ⇒ WDSE ⇒ PSNE chain is correct?", opts:["Every PSNE is also a WDSE","Every WDSE is also a PSNE, but not every PSNE is a WDSE","The chain only holds in zero-sum games","None of these solution concepts are related"], correct:1,
+       exp:"Dominance is a stronger requirement than equilibrium, so it implies equilibrium — but games with no dominant strategy can still have PSNE, as Football/Cricket shows."}
+    ],
+    advanced:[
+      {q:"Give the reasoning for why a game can have a PSNE even though neither player has a dominant strategy.", opts:["PSNE only requires no profitable unilateral deviation from that specific profile, not that a strategy beat every possible profile of the others — a weaker, more local condition","PSNE and dominant strategies are actually the same concept","It's a contradiction and can never happen","PSNE requires zero-sum payoffs"], correct:0,
+       exp:"Dominance demands universal superiority; PSNE only demands local stability at one particular profile. That gap is exactly why PSNE exists more often."},
+      {q:"Why does the order of elimination matter for weakly (not strictly) dominated strategies when narrowing down to equilibria?", opts:["Eliminating a weakly dominated strategy can remove a strategy that was part of a different PSNE, so different elimination orders can converge to different surviving outcomes — strict dominance never removes an equilibrium strategy this way", "Order never actually matters for either kind of dominance", "Weakly dominated strategies can never be eliminated at all", "Strict dominance always produces multiple equilibria"], correct:0,
+       exp:"This is exactly what the slide's example shows: eliminating in order T,R,B,C lands on (M,L), while B,L,C,T lands on (M,R) — two different survivors from the same starting game."}
+    ]
+  }
+},
+{
+  id:'maxmin', num:'04', short:'Max-Min Strategies',
+  tagline:'Playing it safe when you can\'t trust the equilibrium',
+  explain:[
+    "Nash equilibrium assumes everyone plays their equilibrium strategy — but a risk-averse player might not want to bet on that. The <b>max-min (security) strategy</b> is the choice that maximizes a player's own <i>worst-case</i> payoff: pick the strategy whose minimum payoff, over every possible choice by the others, is as large as possible. The resulting guaranteed payoff is the <b>max-min value</b>, v_i.",
+    "Crucially, the worst-case choice by the opponents is a function of player i's strategy s_i. As s_i changes, the minimizer s_{-i}^{min}(s_i) keeps on changing, which is why we must evaluate the minimum separately for every single row.",
+    "Two theorems connect this back to earlier ideas. First: if a player has a dominant strategy, it is automatically also a valid max-min strategy. Second: in <i>any</i> PSNE, a player's equilibrium payoff is always at least their max-min value — playing the equilibrium can never leave you worse off than playing safe."
+  ],
+  notation:[
+    ['s_i^{max-min}', 'arg max_{s_i} min_{s_{-i}} u_i(s_i, s_{-i}) — the worst-case-optimal choice'],
+    ['v_i', 'max_{s_i} min_{s_{-i}} u_i(s_i, s_{-i}) — the guaranteed (max-min) value'],
+    ['Theorem 1', 'dominant strategy ⇒ also a max-min strategy'],
+    ['Theorem 2', 'PSNE payoff u_i(s*) ≥ v_i, for every player i']
+  ],
+  exampleTitle:'Worked example — a risky row vs a safe row',
+  exampleBody:`<p>Consider a matrix where Player 1's row T gives (2,1) / (1,−20), row M gives (3,0) / (−10,1), and row B gives (−100,2) / (3,3) against Player 2's columns L / R. Row-by-row worst cases for Player 1: T → min(2,1)=1, M → min(3,−10)=−10, B → min(−100,3)=−100. Even though B and M both have a higher <i>best</i> case than T, T has by far the best <i>worst</i> case — so T is the max-min strategy, with value 1. A risk-averse player who doesn't trust Player 2 to cooperate picks T.</p>`,
+  quiz:{
+    basic:[
+      {q:"The max-min strategy is the one that...", opts:["Maximizes the player's own worst-case (minimum) payoff across all possible strategies of others","Maximizes the sum of all players' payoffs","Minimizes the opponent's best payoff","Is always the same as the dominant strategy"], correct:0,
+       exp:"It's a 'max of mins' — optimize against the worst thing the others could do to you."},
+      {q:"What is the max-min value v_i?", opts:["Player i's highest possible payoff in the whole game","The guaranteed payoff player i secures by playing their max-min strategy","The average payoff across all strategy profiles","The payoff at the Nash equilibrium only"], correct:1,
+       exp:"v_i is the security level — the worst-case payoff a player can guarantee themselves no matter what others do."}
+    ],
+    intermediate:[
+      {q:"Player 1's own payoffs: row A gives 5 at column X and 1 at column Y; row B gives 2 at X and 2 at Y. What is Player 1's max-min strategy and value?", opts:["Row A, value 5","Row A, value 1","Row B, value 2","Row B, value 1"], correct:2,
+       exp:"Row A's worst case is min(5,1)=1. Row B's worst case is min(2,2)=2. Since 2 > 1, Row B is the max-min strategy with guaranteed value 2."},
+      {q:"If a player has a dominant strategy, what do we know about their max-min strategy?", opts:["The dominant strategy is guaranteed to also be a valid max-min strategy","The max-min strategy must be a different one entirely","No relationship exists between the two","The player has no max-min strategy in that case"], correct:0,
+       exp:"Since a dominant strategy beats every alternative against every possible s_{-i}, it in particular achieves the best worst-case outcome — so it satisfies the max-min definition too."}
+    ],
+    advanced:[
+      {q:"What is the guaranteed relationship between a player's PSNE payoff and their max-min value?", opts:["PSNE payoff is always strictly less than the max-min value","PSNE payoff is always exactly equal to the max-min value","PSNE payoff is always greater than or equal to the max-min value","There is no guaranteed relationship"], correct:2,
+       exp:"Equilibrium play, by definition, is at least as good as any deviation — including the deviation to your own max-min strategy — so it can never fall below your security level."},
+      {q:"Why does risk aversion motivate the max-min criterion instead of simply trusting the Nash equilibrium prediction?", opts:["Nash equilibrium assumes others actually play their equilibrium strategy; a risk-averse player who doesn't trust that assumption instead wants the best guaranteed outcome regardless of what others actually do","Max-min and Nash equilibrium always recommend the same strategy anyway","Risk aversion is irrelevant to strategy selection","Max-min only applies to zero-sum games"], correct:0,
+       exp:"Max-min drops the assumption that others are playing 'rationally' in the equilibrium sense, and instead protects against the true worst case, including irrational or adversarial opponents."}
+    ]
+  }
+},
+{
+  id:'ieds', num:'05', short:'Iterated Elimination', long:'Iterated Elimination of Dominated Strategies',
+  tagline:'Shrinking the game by removing what a rational player would never do',
+  explain:[
+    "Since rational players never choose a dominated strategy, we can repeatedly strip dominated strategies out of a game and analyze the smaller <b>residual game</b> that's left — this process is called <b>Iterated Elimination of Dominated Strategies (IEDS)</b>.",
+    "<b>Order of elimination matters:</b> For strictly dominated strategies, the order of elimination does not matter. However, for <i>weakly</i> dominated strategies, the order does matter — different elimination sequences can lead to different surviving outcomes, sometimes inadvertently eliminating reasonable solutions.",
+    "A useful theorem: removing one player j's dominated strategy never changes <i>any other outcome for player j's own max-min value</i> in the residual game. Intuitively, max-min is a 'max of mins' — deleting a dominated strategy only ever removes a 'min' that wasn't going to set the overall worst case for that same player, precisely because something else already did at least as well against every opposing profile."
+  ],
+  notation:[
+    ['G = ⟨N,(S_i),(u_i)⟩', 'the original game'],
+    ['s_j′ dominated, G′', "residual game after removing player j's dominated strategy s_j′"],
+    ['Theorem', "v_j(G) = v_j(G′) — j's own max-min value is unaffected by removing j's dominated strategy"]
+  ],
+  exampleTitle:'Worked example — before and after elimination',
+  exampleBody:`<p>In a 3×3 game, Player 1's row B is dominated. Before elimination, Player 1's max-min value is 2 and Player 2's is 0. After removing row B, Player 1's max-min value stays exactly 2 (as the theorem guarantees) — but Player 2's max-min value can shift, here rising to 2, since Player 2's worst case depended on rows that were never dominated in the first place. The theorem only protects the eliminated player's own security level, not everyone else's.</p>`,
+  quiz:{
+    basic:[
+      {q:"What is Iterated Elimination of Dominated Strategies (IEDS)?", opts:["Randomly removing strategies to simplify a matrix","Repeatedly removing dominated strategies, then re-analyzing the smaller residual game","Removing all strategies except the Nash equilibrium","Adding new strategies to make a game solvable"], correct:1,
+       exp:"IEDS is an iterative pruning process: eliminate a dominated strategy, look at what's left, and repeat if anything new becomes dominated."},
+      {q:"What justifies removing a dominated strategy from consideration?", opts:["Dominated strategies always give the highest payoff","A rational player would never choose a strategy dominated by another available one", "It makes the game strictly larger", "Dominated strategies are illegal in game theory"], correct:1,
+       exp:"If some other option is always at least as good, a rational, payoff-maximizing player simply has no reason to ever pick the dominated one."}
+    ],
+    intermediate:[
+      {q:"According to the theorem, whose max-min value is guaranteed to stay the same after eliminating a dominated strategy s_j′?", opts:["Everyone's max-min value in the game","Only player j's — the player whose strategy was removed","Only the other players', never j's","No one's — max-min values always change"], correct:1,
+       exp:"The theorem is specifically about the eliminated player's own security level: v_j is preserved because the dominating strategy already covered j's worst case."},
+      {q:"Why can removing a dominated strategy still change the analysis for OTHER players even though it doesn't hurt player j's max-min?", opts:["It can't — nothing about the game ever changes for anyone else","The theorem only protects j's own max-min value; other players' worst cases can depend on strategies of j that were never dominated, so their situation can genuinely shift","Other players' payoffs are recalculated from scratch every time","Only zero-sum games are affected by elimination"], correct:1,
+       exp:"j's dominated row/column being removed changes the matrix that other players face — their own worst-case rows/columns may now look different."}
+    ],
+    advanced:[
+      {q:"The proof shows v_j′ (max-min in the residual game) equals the max of the residual game's row-minimums, and that this can't be less than the removed strategy's own worst case. Why not?", opts:["Because the removed strategy was dominated, some surviving strategy achieves at least as high a payoff against every opposing profile — including whichever profile minimized payoff for the removed strategy — so the achievable worst case never shrinks","Because all strategies in a game always have the same worst-case payoff","Because removing a strategy always increases every payoff automatically","Because the theorem assumes zero-sum payoffs specifically"], correct:0,
+       exp:"This is the crux of the proof: dominance guarantees a strategy that matches or beats the eliminated one everywhere, so the best achievable worst-case value can't drop when the eliminated strategy disappears."},
+      {q:"Does the max-min preservation guarantee still hold if we eliminate a strategy that is NOT dominated (just an arbitrary one)?", opts:["Yes, the guarantee is completely general","No — the guarantee specifically relies on the eliminated strategy being dominated; removing an arbitrary, non-dominated strategy offers no such protection","Yes, but only for the first round of elimination","No, because arbitrary strategies can never be removed at all"], correct:1,
+       exp:"The proof leans entirely on the existence of a dominating strategy to bound the worst case. Remove an arbitrary undominated strategy instead, and that bound simply isn't available."}
+    ]
+  }
+},
+{
+  id:'preservation', num:'06', short:'Preservation of PSNE',
+  tagline:'What elimination does — and doesn\'t do — to equilibria',
+  explain:[
+    "Two natural questions follow from IEDS: does an existing equilibrium survive elimination, and can elimination invent a brand-new one out of nowhere?",
+    "<b>Preservation theorem:</b> if a strategy profile s* was a PSNE before elimination, and every strategy in it still exists afterward, then s* remains a PSNE. Removing other, unused options can't newly tempt anyone to deviate — the equilibrium strategy was already at least as good as everything else, including whatever got eliminated.",
+    "<b>No-new-equilibria theorem:</b> if we eliminate a <i>weakly</i> dominated strategy, every PSNE of the resulting smaller game was <i>already</i> a PSNE of the original game. Weak-dominance elimination can never fabricate a new equilibrium — though it can destroy old ones, if an old PSNE happened to use the strategy that got removed."
+  ],
+  notation:[
+    ['Preservation', 's* is a PSNE in G, s* survives elimination ⇒ s* is a PSNE in G′'],
+    ['No new equilibria', 'ŝ_j weakly dominated, Ĝ = G minus ŝ_j ⇒ every PSNE of Ĝ is a PSNE of G'],
+    ['Summary', 'strict dominance: PSNE set unchanged · weak dominance: PSNE set can only shrink, never grow']
+  ],
+  exampleTitle:'Worked example — combining the two theorems',
+  exampleBody:`<p>Suppose a game has PSNE {s*, s**}, and s** happens to use a weakly dominated strategy that gets eliminated. By the no-new-equilibria theorem, no new PSNE could have appeared. By preservation, s* (which didn't use the eliminated strategy) is guaranteed to survive. s** itself disappears, since it required a strategy that no longer exists. The residual game's PSNE set is therefore exactly {s*} — smaller than before, never larger.</p>`,
+  quiz:{
+    basic:[
+      {q:"If a PSNE's strategies all survive an elimination round, what happens to that PSNE?", opts:["It remains a PSNE in the smaller game","It automatically stops being an equilibrium","It becomes a dominant strategy equilibrium instead","It's impossible to know without recomputing from scratch"], correct:0,
+       exp:"Nothing about the surviving profile's incentives changed — no player gained a new profitable deviation, so it's still an equilibrium."},
+      {q:"Can eliminating a weakly dominated strategy create a brand-new PSNE that didn't exist in the original game?", opts:["Yes, this happens frequently","No — it can only remove existing PSNE, never add a new one","Yes, but only in zero-sum games","No, because weakly dominated strategies can never be eliminated"], correct:1,
+       exp:"This is exactly the no-new-equilibria theorem: any PSNE that appears after elimination must trace back to being a PSNE of the original game too."}
+    ],
+    intermediate:[
+      {q:"Per the summary, eliminating strictly dominated strategies is safe in what specific sense?", opts:["It has absolutely no effect on the set of PSNE at all","It always increases the number of PSNE","It always reduces the game to exactly one PSNE","It only works in two-player games"], correct:0,
+       exp:"Strict dominance elimination leaves the entire equilibrium set untouched — nothing is added or removed."},
+      {q:"Eliminating weakly dominated strategies can do what to the set of PSNE?", opts:["Only add new equilibria, never remove any","Only shrink the set (destroy some equilibria) — never add new ones","Leave it completely unchanged, always","Double the number of equilibria"], correct:1,
+       exp:"Weak elimination is a one-way ratchet on the equilibrium set: strictly non-increasing, and it can genuinely kill off equilibria that relied on the eliminated strategy."}
+    ],
+    advanced:[
+      {q:"In the preservation proof, why does 'no profitable deviation in the smaller game Ĝ' suffice to prove 'no profitable deviation in the bigger game G', specifically for the player j whose strategy was eliminated?", opts:["Because the eliminated strategy ŝ_j was dominated by some surviving strategy t_j, so if s_j* is at least as good as t_j in Ĝ, it must also be at least as good as ŝ_j in G — the dominance relation closes the gap back to the full strategy set","Because eliminated strategies are simply ignored in any proof","Because j's payoffs are recalculated to be zero after elimination","Because the theorem assumes j only has two strategies"], correct:0,
+       exp:"The chain is: s_j* ≥ t_j (in Ĝ, by PSNE) and t_j ≥ ŝ_j (by dominance, holding for every s_{-j}) — combined, s_j* ≥ ŝ_j even in the original game G."},
+      {q:"A game has PSNE {s*, s**}. You eliminate a weakly dominated strategy used only in s**. What can you conclude about the PSNE set of the residual game?", opts:["It's guaranteed to be exactly {s*, s**} still","s* survives (preservation), s** disappears (it used the removed strategy), and no new PSNE could appear (no-new-equilibria) — so the residual PSNE set is exactly {s*}","The residual game has no PSNE at all","The residual game is guaranteed to gain a third equilibrium"], correct:1,
+       exp:"This is the two theorems working together: preservation protects s*, elimination removes s** by construction, and the no-new-equilibria theorem rules out any surprise additions."}
+    ]
+  }
+},
+{
+  id:'matrix', num:'07', short:'Matrix Games', long:'Matrix Games (Zero-Sum)',
+  tagline:'When one payoff table is enough to describe the whole game',
+  explain:[
+    "A two-player <b>zero-sum (matrix) game</b> is a normal-form game with exactly two players whose payoffs always sum to zero for every strategy profile — one player's gain is exactly the other's loss.",
+    "This structure means the entire game can be captured in a <i>single</i> payoff matrix: write down player 1's payoffs, and player 2's are simply the negative of that same matrix — hence the name 'matrix game'. This lets us connect max-min security directly to matrix operations: player 2's max-min value equals the negative of the min-max value computed on player 1's own matrix — row-wise worst-case-best vs column-wise best-case-worst, the seed of the classical minimax theorem."
+  ],
+  notation:[
+    ['zero-sum condition', 'u_1(s) + u_2(s) = 0 for every strategy profile s'],
+    ['matrix u', "player 1's payoff table; player 2's payoffs are exactly −u"],
+    ['row-wise max-min', "max_row min_col u — player 1's security value"],
+    ['col-wise min-max', "min_col max_row u — relates by sign flip to player 2's security value"]
+  ],
+  exampleTitle:'Worked example — Penalty Shootout as a single matrix',
+  exampleBody:`<p>The shootout re-expressed as one matrix (Shooter's payoffs, L/R only for simplicity): u = [[−1, 1], [1, −1]]. Row-wise: L's worst case is −1, R's worst case is −1, so the row-wise max-min is −1. Column-wise: L's best case is 1, R's best case is 1, so the column-wise min-max is 1. Player 2 (Goalkeeper)'s own max-min value is the negative of that min-max computed on Player 1's matrix — since Player 2's payoffs are exactly −u throughout.</p>`,
+  board:{ rowP:'Shooter', colP:'Goalkeeper', rows:['L','R'], cols:['L','R'], payoffs:[[[-1,1],[1,-1]],[[1,-1],[-1,1]]] },
+  boardCaption:"The classic 2×2 matching-pennies-style matrix — zero-sum in every cell.",
+  quiz:{
+    basic:[
+      {q:"What defines a two-player zero-sum (matrix) game?", opts:["Any game where both players get the same payoff","Exactly two players whose payoffs always sum to zero for every strategy profile","A game with exactly zero Nash equilibria","A game where all payoffs are literally 0"], correct:1,
+       exp:"Zero-sum specifically means u_1(s) + u_2(s) = 0 always — it's a constant-sum condition, not literally-zero payoffs."},
+      {q:"Why is it called a 'matrix' game?", opts:["Because it always has exactly 2 strategies per player","Because the whole game can be represented with a single payoff matrix, since player 2's payoffs are just the negative of player 1's","Because it was invented for computer science courses","Because payoffs must be integers"], correct:1,
+       exp:"One matrix fully determines both players' payoffs in the zero-sum case, since player 2's table is forced to be −(player 1's table)."}
+    ],
+    intermediate:[
+      {q:"Matrix u = [[−1,1],[1,−1]] (rows L,R). What is the row-wise max-min (Player 1's security value)?", opts:["1","−1","0","2"], correct:1,
+       exp:"Row L's worst case is min(−1,1)=−1; row R's worst case is min(1,−1)=−1. The max of these worst cases is −1."},
+      {q:"What does the column-wise min of the row-max represent in this framework?", opts:["Player 1's max-min value directly","A quantity related by a sign flip to Player 2's own max-min value, since Player 2's payoffs are −u","A completely unrelated statistic with no game-theoretic meaning","The Nash equilibrium payoff automatically"], correct:1,
+       exp:"Because Player 2's payoff matrix is exactly the negative of Player 1's, computations done on Player 1's matrix translate to Player 2's security value via a sign flip."}
+    ],
+    advanced:[
+      {q:"Why is representing a zero-sum game as a single matrix a meaningful simplification, both computationally and conceptually?", opts:["Because u_1 + u_2 = 0 means player 2's entire payoff structure is fully determined by player 1's, collapsing two payoff tables into one and setting up minimax-style analysis directly on that single matrix","Because zero-sum games never have more than 2 strategies","Because it removes the need to define a strategy set","Because it guarantees a dominant strategy exists"], correct:0,
+       exp:"The zero-sum constraint is what buys you the simplification — without it, you'd genuinely need two independent payoff tables."},
+      {q:"In the shootout matrix, the row-wise max-min for Player 1 is −1, but Player 2's own security value isn't just read off the same number directly. What step correctly connects the two?", opts:["No connection exists; the two values are computed with entirely separate matrices","Player 2's max-min value equals the negative of the min-max value computed on Player 1's matrix, since Player 2's payoffs are the negative of Player 1's throughout","Player 2's max-min value is always exactly equal to Player 1's max-min value","Player 2's payoffs must be recomputed with a brand-new independent matrix"], correct:1,
+       exp:"This sign-flip relationship is precisely why matrix games are convenient: every security-value computation for player 2 reduces to a min-max (not max-min) computation on player 1's same matrix, negated."}
+    ]
+  }
+}
+];
+
+/* =========================================================
+   STATE
+   ========================================================= */
+const state = {
+  activeConcept: 0,
+  activeLevel: {},      // conceptId -> 'basic'|'intermediate'|'advanced'
+  answers: {},           // conceptId -> level -> [selectedIndex or null]
+  qIndex: {},            // conceptId -> level -> current question index
+};
+CONCEPTS.forEach(c=>{
+  state.activeLevel[c.id]='basic';
+  state.answers[c.id]={basic:Array(c.quiz.basic.length).fill(null), intermediate:Array(c.quiz.intermediate.length).fill(null), advanced:Array(c.quiz.advanced.length).fill(null)};
+  state.qIndex[c.id]={basic:0, intermediate:0, advanced:0};
+});
+
+/* =========================================================
+   HELPERS
+   ========================================================= */
+function conceptDoneFraction(c){
+  let total=0, done=0;
+  ['basic','intermediate','advanced'].forEach(lv=>{
+    state.answers[c.id][lv].forEach(a=>{ total++; if(a!==null) done++; });
+  });
+  return {done, total};
+}
+function overallStats(){
+  let total=0, correct=0;
+  CONCEPTS.forEach(c=>{
+    ['basic','intermediate','advanced'].forEach(lv=>{
+      c.quiz[lv].forEach((q,i)=>{
+        total++;
+        const a=state.answers[c.id][lv][i];
+        if(a===q.correct) correct++;
+      });
+    });
+  });
+  return {correct, total};
+}
+
+/* =========================================================
+   BOARD (payoff matrix) RENDERING
+   ========================================================= */
+function renderBoard(container, board, opts){
+  opts = opts || {};
+  const { rowP, colP, rows, cols, payoffs } = board;
+  let html = `<table class="board" role="table" aria-label="payoff matrix"><thead><tr><th class="corner"></th><th class="axis-label" colspan="${cols.length}">${colP}</th></tr><tr><th class="corner"></th>`;
+  cols.forEach(c=> html += `<th>${c}</th>`);
+  html += `</tr></thead><tbody>`;
+  rows.forEach((r, ri)=>{
+    html += `<tr>`;
+    if(ri===0){ html += `<td class="rowlabel axis-label" rowspan="${rows.length}" style="writing-mode:vertical-rl; text-orientation:mixed; transform:rotate(180deg);">${rowP}</td>`; }
+    html += `<td class="rowlabel">${r}</td>`;
+    cols.forEach((c, ci)=>{
+      const p = payoffs[ri][ci];
+      html += `<td class="cell" data-r="${ri}" data-c="${ci}" tabindex="0" role="button" aria-label="row ${r} col ${c} payoffs ${p[0]} ${p[1]}">${p[0]}, ${p[1]}</td>`;
+    });
+    html += `</tr>`;
+  });
+  html += `</tbody></table>`;
+  container.innerHTML = html;
+
+  const cells = container.querySelectorAll('td.cell');
+  cells.forEach(cell=>{
+    const activate = ()=>{
+      const r = +cell.dataset.r, c = +cell.dataset.c;
+      cells.forEach(x=>x.classList.remove('br-row','br-col','eq'));
+      // best response for row player: which column-choice-fixed row maximizes row player's payoff (payoffs[.][c][0])
+      let bestRowVal = -Infinity, bestRows=[];
+      rows.forEach((_,ri)=>{ const v=payoffs[ri][c][0]; if(v>bestRowVal){bestRowVal=v; bestRows=[ri];} else if(v===bestRowVal){bestRows.push(ri);} });
+      let bestColVal = -Infinity, bestCols=[];
+      cols.forEach((_,ci)=>{ const v=payoffs[r][ci][1]; if(v>bestColVal){bestColVal=v; bestCols=[ci];} else if(v===bestColVal){bestCols.push(ci);} });
+      const rowIsBR = bestRows.includes(r);
+      const colIsBR = bestCols.includes(c);
+      bestRows.forEach(ri=>{ const el=container.querySelector(`td.cell[data-r="${ri}"][data-c="${c}"]`); if(el) el.classList.add('br-row'); });
+      bestCols.forEach(ci=>{ const el=container.querySelector(`td.cell[data-r="${r}"][data-c="${ci}"]`); if(el) el.classList.add('br-col'); });
+      if(rowIsBR && colIsBR){ cell.classList.add('eq'); }
+      if(opts.onSelect) opts.onSelect(r,c,rowIsBR,colIsBR);
+    };
+    cell.addEventListener('click', activate);
+    cell.addEventListener('keydown', (e)=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); activate(); }});
+  });
+}
+
+/* hero board */
+const heroBoard = { rowP:'Friend 1', colP:'Friend 2', rows:['Football','Cricket'], cols:['Football','Cricket'],
+  payoffs:[[[2,1],[0,0]],[[0,0],[1,2]]] };
+renderBoard(document.getElementById('heroBoard'), heroBoard, {
+  onSelect:(r,c,rowBR,colBR)=>{
+    const cap = document.getElementById('heroCaption');
+    const rname = heroBoard.rows[r], cname = heroBoard.cols[c];
+    if(rowBR && colBR){ cap.textContent = `(${rname}, ${cname}) is a Nash equilibrium — neither friend wants to switch alone.`; }
+    else if(rowBR && !colBR){ cap.textContent = `Friend 1 is happy with ${rname}, but Friend 2 would rather switch away from ${cname}. Not an equilibrium.`; }
+    else if(!rowBR && colBR){ cap.textContent = `Friend 2 is happy with ${cname}, but Friend 1 would rather switch away from ${rname}. Not an equilibrium.`; }
+    else{ cap.textContent = `Neither friend is happy at (${rname}, ${cname}) — both would deviate. Not an equilibrium.`; }
+  }
+});
+
+/* =========================================================
+   SIDEBAR NAV
+   ========================================================= */
+function renderNav(){
+  const nav = document.getElementById('conceptNav');
+  nav.innerHTML = '';
+  CONCEPTS.forEach((c, idx)=>{
+    const {done,total} = conceptDoneFraction(c);
+    const item = document.createElement('div');
+    item.className = 'nav-item' + (idx===state.activeConcept ? ' active':'');
+    const dotClass = done===0 ? '' : (done===total ? 'done' : 'partial');
+    item.innerHTML = `<span class="nav-num">${c.num}</span><span class="nav-label">${c.short}</span><span class="nav-dot ${dotClass}"></span>`;
+    item.addEventListener('click', ()=>{ state.activeConcept = idx; renderAll(); window.scrollTo({top:0, behavior:'smooth'}); if(window.innerWidth<=860){ document.getElementById('conceptNav').classList.remove('open'); } });
+    nav.appendChild(item);
+  });
+  const {correct, total} = overallStats();
+  document.getElementById('overallFill').style.width = total? (correct/total*100)+'%' : '0%';
+  document.getElementById('overallNum').textContent = `${correct} / ${total} questions correct`;
+}
+
+document.getElementById('menuToggle').addEventListener('click', ()=>{
+  document.getElementById('conceptNav').classList.toggle('open');
+});
+
+/* =========================================================
+   CONTENT RENDERING
+   ========================================================= */
+function renderContent(){
+  const c = CONCEPTS[state.activeConcept];
+  const el = document.getElementById('content');
+
+  let notationHtml = '';
+  if(c.notation){
+    notationHtml = `<div class="notation-list">` + c.notation.map(n=>`<div class="row"><span class="sym mono">${n[0]}</span><span class="desc">${n[1]}</span></div>`).join('') + `</div>`;
+  }
+
+  let boardHtml = '';
+  if(c.board){
+    boardHtml = `<div class="card"><h3><span class="tag">Board</span> Interactive matrix</h3>
+      <p>Click any cell to see whose best response it is. A gold-highlighted cell with both borders lit is a Nash equilibrium.</p>
+      <div class="board-wrap" id="conceptBoard" style="margin-top:14px;"></div>
+      ${c.boardCaption ? `<p class="board-caption">${c.boardCaption}</p>`:''}
+      <div class="legend">
+        <span><i style="background:var(--teal)"></i>Row player's best response</span>
+        <span><i style="background:var(--red)"></i>Column player's best response</span>
+        <span><i style="background:var(--gold)"></i>Nash equilibrium</span>
+      </div>
+    </div>`;
+  }
+
+  el.innerHTML = `
+    <div class="concept-head">
+      <div class="eyebrow">Concept ${c.num} of ${CONCEPTS.length}</div>
+      <h2>${c.long || c.short}</h2>
+      <p class="tagline">${c.tagline}</p>
+    </div>
+
+    <div class="card">
+      <h3><span class="tag">Learn</span> The idea</h3>
+      ${c.explain.map(p=>`<p>${p}</p>`).join('')}
+      ${notationHtml ? `<h3 style="margin-top:18px;"><span class="tag">Notation</span> Reference</h3>${notationHtml}`:''}
+      ${c.exampleBody ? `<div style="margin-top:16px;">
+        <div class="example-toggle" id="exampleToggle">▸ ${c.exampleTitle || 'Worked example'}</div>
+        <div class="example-body" id="exampleBody">${c.exampleBody}</div>
+      </div>` : ''}
+    </div>
+
+    ${boardHtml}
+
+    <div class="quiz-card" id="quizCard"></div>
+
+    <div class="concept-footnav">
+      ${state.activeConcept>0 ? `<div class="footnav-btn" id="prevConcept"><span class="k">← Previous</span><span class="v">${CONCEPTS[state.activeConcept-1].short}</span></div>` : `<div></div>`}
+      ${state.activeConcept<CONCEPTS.length-1 ? `<div class="footnav-btn right" id="nextConcept"><span class="k">Next →</span><span class="v">${CONCEPTS[state.activeConcept+1].short}</span></div>` : `<div></div>`}
+    </div>
+  `;
+
+  if(c.board){
+    renderBoard(document.getElementById('conceptBoard'), c.board);
+  }
+
+  const toggle = document.getElementById('exampleToggle');
+  if(toggle){
+    toggle.addEventListener('click', ()=>{
+      const body = document.getElementById('exampleBody');
+      const open = body.classList.toggle('open');
+      toggle.textContent = (open? '▾ ' : '▸ ') + (c.exampleTitle || 'Worked example');
+    });
+  }
+
+  const prevBtn = document.getElementById('prevConcept');
+  if(prevBtn) prevBtn.addEventListener('click', ()=>{ state.activeConcept--; renderAll(); window.scrollTo({top:0, behavior:'smooth'}); });
+  const nextBtn = document.getElementById('nextConcept');
+  if(nextBtn) nextBtn.addEventListener('click', ()=>{ state.activeConcept++; renderAll(); window.scrollTo({top:0, behavior:'smooth'}); });
+
+  renderQuiz();
+}
+
+/* =========================================================
+   QUIZ RENDERING
+   ========================================================= */
+const LEVELS = [
+  {key:'basic', label:'Basic', color:'var(--teal)'},
+  {key:'intermediate', label:'Intermediate', color:'var(--gold)'},
+  {key:'advanced', label:'Advanced', color:'var(--red)'}
+];
+
+function renderQuiz(){
+  const c = CONCEPTS[state.activeConcept];
+  const level = state.activeLevel[c.id];
+  const qs = c.quiz[level];
+  const qi = state.qIndex[c.id][level];
+  const answers = state.answers[c.id][level];
+  const card = document.getElementById('quizCard');
+
+  const correctCount = qs.filter((q,i)=>answers[i]===q.correct).length;
+  const answeredCount = answers.filter(a=>a!==null).length;
+
+  let tabsHtml = LEVELS.map(lv=>{
+    const done = state.answers[c.id][lv.key].every(a=>a!==null);
+    return `<div class="level-tab ${lv.key===level?'active':''}" data-level="${lv.key}"><span class="dot" style="background:${done?'var(--gold)':'var(--line)'}"></span>${lv.label}</div>`;
+  }).join('');
+
+  card.innerHTML = `
+    <div class="quiz-head">
+      <div class="level-tabs">${tabsHtml}</div>
+      <div class="quiz-score">Score: <b>${correctCount}/${qs.length}</b> · ${answeredCount}/${qs.length} answered</div>
+    </div>
+    <div class="q-progress" id="qProgress"></div>
+    <div id="qBody"></div>
+  `;
+
+  document.querySelectorAll('.level-tab').forEach(t=>{
+    t.addEventListener('click', ()=>{ state.activeLevel[c.id] = t.dataset.level; renderQuiz(); });
+  });
+
+  const progWrap = document.getElementById('qProgress');
+  qs.forEach((q,i)=>{
+    const span = document.createElement('span');
+    const a = answers[i];
+    if(a!==null){ span.classList.add('answered', a===q.correct ? 'correct':'wrong'); }
+    span.innerHTML = '<i></i>';
+    span.style.cursor='pointer';
+    span.addEventListener('click', ()=>{ state.qIndex[c.id][level]=i; renderQuiz(); });
+    progWrap.appendChild(span);
+  });
+
+  renderQuestion();
+}
+
+function renderQuestion(){
+  const c = CONCEPTS[state.activeConcept];
+  const level = state.activeLevel[c.id];
+  const qs = c.quiz[level];
+  let qi = state.qIndex[c.id][level];
+  if(qi>=qs.length) qi = qs.length-1;
+  const q = qs[qi];
+  const answers = state.answers[c.id][level];
+  const selected = answers[qi];
+  const body = document.getElementById('qBody');
+  const letters = ['A','B','C','D'];
+
+  if(!q){
+    body.innerHTML = `<div class="quiz-done"><h4>Level complete</h4><p>You've answered every ${level} question for this concept.</p></div>`;
+    return;
+  }
+
+  let optsHtml = q.opts.map((opt,i)=>{
+    let cls = 'opt';
+    if(selected!==null){
+      cls += ' disabled';
+      if(i===q.correct) cls += ' correct';
+      else if(i===selected) cls += ' incorrect';
+    }
+    return `<div class="${cls}" data-i="${i}"><span class="letter">${letters[i]}</span><span>${opt}</span></div>`;
+  }).join('');
+
+  body.innerHTML = `
+    <div class="q-text">${q.q}</div>
+    <div class="q-options">${optsHtml}</div>
+    <div class="feedback ${selected!==null ? 'show '+(selected===q.correct?'ok':'no') : ''}" id="feedback">
+      ${selected!==null ? `<span class="fb-lbl">${selected===q.correct? 'Correct' : 'Not quite'}</span>${q.exp}` : ''}
+    </div>
+    <div class="quiz-nav">
+      <button class="btn ghost" id="prevQ" ${qi===0?'disabled':''}>← Previous</button>
+      <button class="btn primary" id="nextQ" ${qi>=qs.length-1?'disabled':''}>Next question →</button>
+    </div>
+  `;
+
+  if(selected===null){
+    body.querySelectorAll('.opt').forEach(optEl=>{
+      optEl.addEventListener('click', ()=>{
+        const i = +optEl.dataset.i;
+        state.answers[c.id][level][qi] = i;
+        renderQuiz();
+        renderNav();
+      });
+    });
+  }
+
+  document.getElementById('prevQ').addEventListener('click', ()=>{ state.qIndex[c.id][level] = Math.max(0, qi-1); renderQuestion(); refreshProgressDots(); });
+  document.getElementById('nextQ').addEventListener('click', ()=>{ state.qIndex[c.id][level] = Math.min(qs.length-1, qi+1); renderQuestion(); refreshProgressDots(); });
+}
+
+function refreshProgressDots(){
+  const c = CONCEPTS[state.activeConcept];
+  const level = state.activeLevel[c.id];
+  const qs = c.quiz[level];
+  const answers = state.answers[c.id][level];
+  const progWrap = document.getElementById('qProgress');
+  if(!progWrap) return;
+  [...progWrap.children].forEach((span,i)=>{
+    span.classList.remove('answered','correct','wrong');
+    const a = answers[i];
+    if(a!==null){ span.classList.add('answered', a===qs[i].correct?'correct':'wrong'); }
+  });
+  const head = document.querySelector('.quiz-score');
+  if(head){
+    const correctCount = qs.filter((q,i)=>answers[i]===q.correct).length;
+    const answeredCount = answers.filter(a=>a!==null).length;
+    head.innerHTML = `Score: <b>${correctCount}/${qs.length}</b> · ${answeredCount}/${qs.length} answered`;
+  }
+}
+
+/* =========================================================
+   INIT
+   ========================================================= */
+function renderAll(){
+  renderNav();
+  renderContent();
+}
+renderAll();
+</script>
+</body>
+</html>
