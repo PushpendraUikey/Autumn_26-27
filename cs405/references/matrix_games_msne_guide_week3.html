@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Matrix Games & MSNE — Week 3 Study Module</title>
+<script>
+  MathJax = { tex: { inlineMath: [['\\(','\\)']], displayMath: [['\\[','\\]']] } };
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.min.js"></script>
+<style>
+  :root{
+    --navy:#1e3a6d; --blue:#3b6fd4; --lightblue:#eaf1fc; --pink:#c0264d;
+    --green:#1f7a4d; --bg:#f7f9fc; --card:#ffffff; --text:#1c2430; --muted:#5b6b82;
+  }
+  *{box-sizing:border-box;}
+  body{
+    font-family:'Georgia','Times New Roman',serif;
+    background:var(--bg); color:var(--text); margin:0; line-height:1.6;
+  }
+  header{
+    background:linear-gradient(135deg,var(--navy),var(--blue));
+    color:white; padding:2rem 1.5rem 1.5rem;
+  }
+  header h1{margin:0 0 .3rem; font-size:1.8rem;}
+  header p{margin:0; opacity:.9; font-family:Arial,sans-serif; font-size:.95rem;}
+  nav{
+    position:sticky; top:0; z-index:50; background:var(--navy);
+    display:flex; flex-wrap:wrap; font-family:Arial,sans-serif; font-size:.85rem;
+  }
+  nav a{
+    color:#cfe0ff; text-decoration:none; padding:.7rem .9rem; flex:1; text-align:center;
+    border-right:1px solid rgba(255,255,255,.15);
+  }
+  nav a:hover{background:var(--blue); color:white;}
+  main{max-width:900px; margin:0 auto; padding:1.5rem;}
+  section{margin-bottom:2.5rem;}
+  h2{
+    color:var(--navy); border-bottom:3px solid var(--blue); padding-bottom:.3rem;
+    font-size:1.5rem; margin-top:0;
+  }
+  h3{color:var(--pink); font-size:1.15rem; margin-top:1.8rem;}
+  .card{
+    background:var(--card); border:1px solid #dde5f0; border-radius:10px;
+    padding:1.1rem 1.3rem; margin:1rem 0; box-shadow:0 1px 3px rgba(0,0,0,.04);
+  }
+  .def{background:var(--lightblue); border-left:5px solid var(--blue);}
+  .thm{background:#fdf3f6; border-left:5px solid var(--pink);}
+  .analogy{
+    background:#fff8e6; border-left:5px solid #d99a1f; font-family:Arial,sans-serif;
+    font-size:.95rem;
+  }
+  .analogy b{color:#a5720f;}
+  .proof{background:#eef7f0; border-left:5px solid var(--green);}
+  .intuition{
+    background:#f0f0ff; border-left:5px solid #6a4fc9; font-family:Arial,sans-serif;
+    font-size:.93rem;
+  }
+  table{border-collapse:collapse; margin:1rem auto; font-family:Arial,sans-serif;}
+  td,th{border:1px solid #b9c6dc; padding:.5rem .9rem; text-align:center;}
+  th{background:var(--lightblue);}
+  .tag{
+    display:inline-block; font-family:Arial,sans-serif; font-size:.7rem; font-weight:bold;
+    padding:.15rem .55rem; border-radius:12px; margin-left:.4rem; vertical-align:middle;
+  }
+  .easy{background:#dff5e3; color:#1f7a4d;}
+  .medium{background:#fff1cf; color:#8a6300;}
+  .hard{background:#fbdede; color:#a3213f;}
+  details{
+    background:var(--card); border:1px solid #dde5f0; border-radius:8px;
+    padding:.7rem 1rem; margin-top:.6rem;
+  }
+  summary{
+    cursor:pointer; font-weight:bold; color:var(--blue); font-family:Arial,sans-serif;
+  }
+  summary:hover{color:var(--pink);}
+  .problem{border:1px solid #cddcf2; border-radius:10px; padding:1rem 1.3rem; margin:1.2rem 0; background:#fbfcff;}
+  code{background:#eef1f7; padding:.1rem .35rem; border-radius:4px; font-size:.9em;}
+  footer{text-align:center; font-family:Arial,sans-serif; color:var(--muted); font-size:.8rem; padding:2rem 0;}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Matrix Games &amp; Mixed Strategy Nash Equilibrium</h1>
+  <p>CS 6001 — Game Theory and Algorithmic Mechanism Design · Week 3 Study Module</p>
+</header>
+
+<nav>
+  <a href="#concepts">1. Core Concepts</a>
+  <a href="#proofs">2. Proofs &amp; Intuition</a>
+  <a href="#checks">3. Concept Checks</a>
+  <a href="#problems">4. Practice Problems</a>
+  <a href="#solutions">5. Solutions</a>
+</nav>
+
+<main>
+
+<!-- ============================================================ -->
+<section id="concepts">
+<h2>1. Core Concepts &amp; Analogies</h2>
+
+<h3>1.1 Matrix Games (Two-Player Zero-Sum Games)</h3>
+<div class="card def">
+<b>Definition.</b> A normal-form game \( \langle N, (S_i)_{i\in N}, (u_i)_{i\in N}\rangle \) with \(N=\{1,2\}\) and \(u_1+u_2\equiv 0\) is called a <b>matrix game</b>. Because one player's gain is exactly the other's loss, the entire game is captured by a single matrix \(u\) (player 1's payoffs); player 2's payoffs are simply \(-u\).
+</div>
+<div class="card analogy">
+<b>Analogy:</b> Think of splitting a fixed-size pizza with a rival who wants exactly what you don't. There's no "cooperation slice" to grow — every extra bite you get is a bite they lose. That's why one matrix suffices: knowing your slice tells you theirs automatically.
+</div>
+
+<h3>1.2 Saddle Points</h3>
+<div class="card def">
+<b>Definition.</b> A saddle point of a matrix \(u\) is an entry that is simultaneously the <b>maximum in its column</b> and the <b>minimum in its row</b> — i.e., the best player 1 can do given player 2's choice, and the best (safest) player 2 can do given player 1's choice.
+</div>
+<div class="card thm">
+<b>Theorem.</b> In a matrix game with utility matrix \(u\), \((s_1^*,s_2^*)\) is a saddle point <b>iff</b> it is a PSNE (pure strategy Nash equilibrium).
+</div>
+<div class="card analogy">
+<b>Analogy:</b> Picture a horse saddle (or a mountain pass) — it curves up in one direction and down in the other. At the saddle point, if you walk along the "row" direction you're at a local <i>minimum</i>, and if you walk along the "column" direction you're at a local <i>maximum</i>. Neither player wants to move away from it: player 1 can't do better by switching rows (it's already the row-min from player 2's view being contained, i.e., it's the best row-guarantee), and player 2 can't do better by switching columns.
+</div>
+
+<h3>1.3 Maxmin and Minmax Values</h3>
+<div class="card def">
+\[
+\underline{v} = \max_{s_1\in S_1}\min_{s_2\in S_2} u(s_1,s_2) \quad\text{(maxmin, player 1's security value)}
+\]
+\[
+\overline{v} = \min_{s_2\in S_2}\max_{s_1\in S_1} u(s_1,s_2) \quad\text{(minmax, player 2's security value)}
+\]
+<b>Lemma:</b> For any matrix game, \(\overline v \ge \underline v\). A PSNE exists <b>iff</b> \(\overline v = \underline v\).
+</div>
+<div class="card analogy">
+<b>Analogy:</b> Think of buying insurance. Your <b>maxmin</b> is "the best guaranteed outcome I can lock in, assuming the worst-case opponent move." Your opponent's <b>minmax</b> is "the smallest ceiling I can impose on you, assuming you play your best response." Naturally, the ceiling your opponent can impose is never below the floor you can guarantee for yourself (\(\overline v \ge \underline v\)) — otherwise someone could out-guarantee the other's cap, a contradiction. When floor = ceiling, both players have found a mutually stable resting point: the saddle point.
+</div>
+
+<h3>1.4 Mixed Strategies</h3>
+<div class="card def">
+For a finite set \(A\), define \(\Delta A = \{p\in[0,1]^{|A|} : \sum_{a\in A} p(a)=1\}\). A <b>mixed strategy</b> \(\sigma_i \in \Delta S_i\) is a probability distribution over player \(i\)'s pure strategies. Utility under a mixed profile is the <b>expectation</b>:
+\[
+u_i(\sigma_i,\sigma_{-i}) = \sum_{s_1\in S_1}\sum_{s_2\in S_2}\cdots\sum_{s_n\in S_n} \sigma_1(s_1)\sigma_2(s_2)\cdots\sigma_n(s_n)\, u_i(s_1,\dots,s_n)
+\]
+</div>
+<div class="card analogy">
+<b>Analogy:</b> A goalkeeper who <i>always</i> dives left is predictable and gets exploited. A mixed strategy is like a poker player randomizing bluffs — deliberately unpredictable, governed by a fixed <i>recipe</i> of probabilities (e.g., "dive left 50% of the time"), so no fixed counter-strategy can be exploited indefinitely.
+</div>
+
+<h3>1.5 Mixed Strategy Nash Equilibrium (MSNE)</h3>
+<div class="card def">
+A mixed profile \((\sigma_i^*,\sigma_{-i}^*)\) is an <b>MSNE</b> if for every player \(i\),
+\[
+u_i(\sigma_i^*,\sigma_{-i}^*) \ge u_i(\sigma_i,\sigma_{-i}^*) \quad \forall \sigma_i \in \Delta S_i.
+\]
+Equivalently (and more usefully), it suffices to check only <b>pure</b> deviations:
+\[
+u_i(\sigma_i^*,\sigma_{-i}^*) \ge u_i(s_i,\sigma_{-i}^*) \quad \forall s_i \in S_i.
+\]
+</div>
+<div class="card analogy">
+<b>Analogy:</b> It's like a weather forecast that's "calibrated": given everyone else's random strategy, no single deterministic day-choice beats your current randomized plan. You don't need to check every possible weird mixed deviation — just every "pure day" — because a mixed strategy's payoff is only ever a weighted average of its pure-strategy payoffs, and an average can never beat the best individual pure option.
+</div>
+
+<h3>1.6 Support &amp; Dominated Strategies in Mixed Strategies</h3>
+<div class="card def">
+<b>Support:</b> \(\delta(\sigma_i) = \{s_i \in S_i : \sigma_i(s_i) > 0\}\) — the strategies actually played with positive probability.
+</div>
+<div class="card thm">
+<b>Theorem.</b> If a pure strategy \(s_i\) is strictly dominated by a mixed strategy \(\sigma_i \in \Delta S_i\), then in <b>every</b> MSNE of the game, \(s_i\) is chosen with probability zero.
+</div>
+<div class="card analogy">
+<b>Analogy:</b> Suppose choosing "always order the tuna sandwich" is worse than a coin-flip between the steak and the salmon, no matter what the kitchen (opponent) does. A rational diner would never put the tuna sandwich on their menu of options at all — even with a tiny probability — because the coin-flip strictly beats it in every scenario. This lets us <i>prune</i> the strategy space before searching for equilibrium — sometimes a strategy looks fine on its own but is dominated only once you allow mixtures of the others.
+</div>
+
+<h3>1.7 Computational Complexity of Finding an MSNE</h3>
+<div class="card def">
+The support-based search leads to a <b>feasibility program</b> (not generally a linear program unless \(n=2\)) that must be solved for each of the \(K = \prod_i (2^{|S_i|}-1)\) support profiles.
+</div>
+<div class="card thm">
+Finding an MSNE is <b>PPAD-complete</b> (Polynomial Parity Argument on Directed graphs) — Daskalakis, Goldberg &amp; Papadimitriou, "The Complexity of Computing a Nash Equilibrium" (2009).
+</div>
+<div class="card analogy">
+<b>Analogy:</b> PPAD-complete problems are like a "guaranteed treasure hunt" — Nash's theorem guarantees an equilibrium <i>exists</i> (like Brouwer's fixed point guarantees a fixed point exists), but finding it is like following a long corridor of doors where you know a treasure room exists at the end of some hallway, yet no map lets you jump there directly — you must walk the whole corridor. It's easier than NP-hard problems (a solution is verifiable and provably exists), but there's no known polynomial-time algorithm for general games — it belongs to its own "this is provably hard, but not NP-hard" complexity class.
+</div>
+
+</section>
+
+<!-- ============================================================ -->
+<section id="proofs">
+<h2>2. Mathematical Proofs &amp; Intuition</h2>
+
+<h3>2.1 The PSNE Theorem</h3>
+<div class="card thm">
+<b>Theorem.</b> A game has a PSNE (equivalently, a saddle point) if and only if \(\overline v = \underline v = u(s_1^*,s_2^*)\), where \(s_1^*\) and \(s_2^*\) are maxmin and minmax strategies for players 1 and 2 respectively. <b>Corollary:</b> \((s_1^*,s_2^*)\) is a PSNE.
+</div>
+
+<div class="card proof">
+<b>Proof (\(\Rightarrow\)):</b> Let \((s_1^*,s_2^*)\) be a PSNE. Since it's a PSNE, \(u(s_1^*,s_2^*) \ge u(s_1,s_2^*),\ \forall s_1\in S_1\). Then
+\[
+u(s_1^*,s_2^*) \ge \max_{t_1\in S_1} u(t_1,s_2^*) \ge \min_{t_2\in S_2}\max_{t_1\in S_1} u(t_1,t_2) = \overline v,
+\]
+since \(s_2^*\) is a specific strategy. Symmetrically for player 2, \(\underline v \ge u(s_1^*,s_2^*)\). Combined with the lemma \(\overline v \ge \underline v\):
+\[
+u(s_1^*,s_2^*) \ge \overline v \ge \underline v \ge u(s_1^*,s_2^*) \ \Longrightarrow\ u(s_1^*,s_2^*) = \overline v = \underline v.
+\]
+This also shows \(s_1^*, s_2^*\) are exactly the maxmin/minmax strategies.
+
+<b>Proof (\(\Leftarrow\)):</b> Suppose \(\overline v = \underline v = u(s_1^*,s_2^*)\) with \(s_1^*, s_2^*\) the maxmin/minmax strategies. Then
+\[
+u(s_1^*,s_2) \ge \min_{t_2\in S_2} u(s_1^*,t_2) = \max_{t_1\in S_1}\min_{t_2\in S_2} u(t_1,t_2) = \underline v,\ \forall s_2\in S_2.
+\]
+Similarly \(u(s_1,s_2^*) \le \overline v,\ \forall s_1\in S_1\). Since \(\underline v = \overline v = u(s_1^*,s_2^*)\), substituting gives \(u(s_1^*,s_2^*)\ge u(s_1,s_2^*)\) and \(u(s_1^*,s_2^*)\le u(s_1^*, s_2)\)... i.e. \((s_1^*,s_2^*)\) satisfies the PSNE conditions. \(\blacksquare\)
+</div>
+<div class="card intuition">
+<b>Plain English:</b> Player 1's best guaranteed floor and player 2's best guaranteed ceiling are two different games of "assume the worst." The theorem says: a stable pure outcome exists exactly when those two pessimistic estimates happen to <i>meet in the middle</i> at the same number, played out by the same pair of strategies. If the floor is below the ceiling, there's a gap — and that gap is exactly the room in which no PSNE can sit; someone always wants to deviate.
+</div>
+
+<h3>2.2 The MSNE Characterization Theorem</h3>
+<div class="card thm">
+<b>Theorem.</b> A mixed strategy profile \((\sigma_i^*,\sigma_{-i}^*)\) is an MSNE iff for every player \(i\):
+<ol>
+<li>\(u_i(s_i,\sigma_{-i}^*)\) is <b>identical</b> for all \(s_i\in\delta(\sigma_i^*)\) (every strategy in the support earns the same payoff),</li>
+<li>\(u_i(s_i,\sigma_{-i}^*)\ge u_i(s_i',\sigma_{-i}^*),\ \forall s_i\in\delta(\sigma_i^*),\ s_i'\notin\delta(\sigma_i^*)\) (nothing outside the support does better).</li>
+</ol>
+</div>
+
+<div class="card proof">
+<b>Key observation:</b> \(\max_{\sigma_i\in\Delta S_i} u_i(\sigma_i,\sigma_{-i}) = \max_{s_i\in S_i} u_i(s_i,\sigma_{-i})\) — maximizing over a distribution is achieved by putting all mass on the pure maximizer.
+
+<b>Proof (\(\Rightarrow\)):</b> Given \((\sigma_i^*,\sigma_{-i}^*)\) is an MSNE,
+\[
+u_i(\sigma_i^*,\sigma_{-i}^*) = \max_{\sigma_i\in\Delta S_i} u_i(\sigma_i,\sigma_{-i}^*) = \max_{s_i\in S_i} u_i(s_i,\sigma_{-i}^*) = \max_{s_i\in\delta(\sigma_i^*)} u_i(s_i,\sigma_{-i}^*) \quad (1)
+\]
+(the maximizer must lie in \(\delta(\sigma_i^*)\); otherwise shifting all mass to the outside maximizer would strictly improve payoff, contradicting the MSNE). By definition of expected utility,
+\[
+u_i(\sigma_i^*,\sigma_{-i}^*) = \sum_{s_i\in S_i}\sigma_i^*(s_i)u_i(s_i,\sigma_{-i}^*) = \sum_{s_i\in\delta(\sigma_i^*)}\sigma_i^*(s_i)u_i(s_i,\sigma_{-i}^*) \quad (2)
+\]
+Equations (1) and (2) say a <b>max</b> equals a <b>positive weighted average</b> of the same set of values — this can only happen if every value in that set is identical. This proves <b>condition 1</b>.
+
+For <b>condition 2</b>: suppose (for contradiction) there exist \(s_i\in\delta(\sigma_i^*)\) and \(s_i'\notin\delta(\sigma_i^*)\) with \(u_i(s_i,\sigma_{-i}^*) < u_i(s_i',\sigma_{-i}^*)\). Shifting the probability mass \(\sigma^*(s_i)\) onto \(s_i'\) strictly increases player \(i\)'s utility — contradicting that \((\sigma_i^*,\sigma_{-i}^*)\) is an MSNE. This proves the necessary direction.
+
+<b>Proof (\(\Leftarrow\)):</b> Given the two conditions, let \(m_i(\sigma_{-i}^*) := u_i(s_i,\sigma_{-i}^*)\) for all \(s_i\in\delta(\sigma_i^*)\) (condition 1: this is well-defined). Condition 2 says \(m_i(\sigma_{-i}^*) = \max_{s_i\in S_i} u_i(s_i,\sigma_{-i}^*)\). Then
+\[
+u_i(\sigma_i^*,\sigma_{-i}^*) = \sum_{s_i\in\delta(\sigma_i^*)}\sigma_i^*(s_i)u_i(s_i,\sigma_{-i}^*) = m_i(\sigma_{-i}^*) = \max_{s_i\in S_i} u_i(s_i,\sigma_{-i}^*) = \max_{\sigma_i\in\Delta S_i} u_i(\sigma_i,\sigma_{-i}^*) \ge u_i(\sigma_i,\sigma_{-i}^*)
+\]
+for all \(\sigma_i\in\Delta S_i\). This proves the sufficient direction. \(\blacksquare\)
+</div>
+<div class="card intuition">
+<b>Plain English:</b> If you're genuinely willing to randomize between two or more actions, you must be perfectly <i>indifferent</i> between them — otherwise you'd just put all your weight on the better one (condition 1). And nothing you're <i>not</i> playing can secretly be better, or you'd want to shift weight onto it (condition 2). This "equalize-the-payoffs-in-the-support" idea is exactly what turns MSNE-finding into a system of equations: set the supported strategies' payoffs equal to each other, and solve for the probabilities.
+</div>
+
+<h3>2.3 Existence: Nash's Theorem &amp; Brouwer's Fixed Point Theorem</h3>
+<div class="card thm">
+<b>Theorem (Nash, 1951).</b> Every finite game (finite players, each with a finite strategy set) has a mixed Nash equilibrium.
+</div>
+<div class="card def">
+<b>Background:</b> A set \(S\subseteq\mathbb{R}^n\) is <b>convex</b> if it contains every line segment between its points; <b>closed</b> if it contains all its limit points; <b>bounded</b> if it fits inside some finite ball; <b>compact</b> if closed and bounded.
+</div>
+<div class="card thm">
+<b>Brouwer's Fixed Point Theorem.</b> If \(S\subseteq\mathbb{R}^n\) is convex and compact, and \(T:S\to S\) is continuous, then \(T\) has a fixed point: \(\exists\, x^*\in S\) s.t. \(T(x^*)=x^*\).
+</div>
+<div class="card intuition">
+<b>How it's used:</b> The proof of Nash's theorem (given in full separately on the course page) constructs a "best-response-nudging" map \(T\) over the space of mixed-strategy profiles — which is convex and compact (a product of simplices \(\Delta S_1\times\cdots\times\Delta S_n\)) — such that a fixed point of \(T\) corresponds exactly to a Nash equilibrium (no player wants to deviate). Because the strategy space satisfies Brouwer's convex+compact conditions and \(T\) is continuous, a fixed point is guaranteed to exist — hence so does an MSNE.
+</div>
+<div class="card analogy">
+<b>Analogy:</b> Imagine stirring a cup of coffee: no matter how you stir (as long as it's a continuous motion mapping the coffee's surface back onto itself), at least one point of coffee ends up exactly where it started. Brouwer's theorem is that guarantee for any convex, compact "cup." Nash's genius was building a "stirring map" out of everyone's best responses so that "the coffee particle that didn't move" is precisely the equilibrium — everyone's strategy is already the best response to everyone else's, so no one is nudged anywhere.
+</div>
+
+</section>
+
+<!-- ============================================================ -->
+<section id="checks">
+<h2>3. Concept Check Questions</h2>
+<p style="font-family:Arial,sans-serif;color:var(--muted);font-size:.9rem;">Three short-answer / subjective questions per topic — meant to test conceptual understanding, not computation. Click any question to reveal a model answer. Several of these are deliberately open-ended and don't reduce to a single number.</p>
+
+<h3>3.1 Matrix Games (Two-Player Zero-Sum Games)</h3>
+<details><summary>Q1. Why does the zero-sum condition \(u_1+u_2\equiv0\) let us represent the whole game with just one matrix?</summary>
+<div class="card">If \(u_2 \equiv -u_1\) at every strategy profile, then knowing Player 1's payoff at a cell tells you Player 2's payoff automatically — it's just the negative. So a single matrix \(u\) (Player 1's payoffs) carries all the information needed to describe both players' incentives; writing out a second matrix for Player 2 would be pure redundancy, since it would just be \(-u\) entrywise.</div>
+</details>
+<details><summary>Q2. Is every two-player game where one player's utility rises exactly when the other's falls necessarily zero-sum? Explain.</summary>
+<div class="card">Not in the literal \(u_1+u_2\equiv0\) sense — a <b>constant-sum</b> game, where \(u_1+u_2\equiv c\) for some fixed \(c\ne0\), also has the property that one player's gain is exactly the other's loss, but it isn't technically "zero-sum" as defined. However, every constant-sum game is <i>strategically equivalent</i> to a zero-sum game: subtracting \(c/2\) from every payoff (or subtracting \(c\) from just \(u_2\)) recovers \(u_1+u_2\equiv0\) without changing anyone's best responses, since adding/subtracting a constant to a player's payoffs never changes which strategy maximizes it. So the maxmin/minmax/saddle-point machinery of this section applies unchanged to constant-sum games too.</div>
+</details>
+<details><summary>Q3. Consider a two-player zero-sum game where both players have exactly one strategy each. What can you say about its saddle point?</summary>
+<div class="card">With only one row and one column, that single cell is <i>vacuously</i> both the maximum in its (only) column and the minimum in its (only) row — there's nothing else to compare against. So the single entry is trivially a saddle point, and by the PSNE Theorem it's automatically the unique PSNE, with \(\overline v=\underline v\) equal to that one payoff value. This is a degenerate but useful sanity check: a game with no real strategic choice always "trivially" has an equilibrium.</div>
+</details>
+
+<h3>3.2 Saddle Points</h3>
+<details><summary>Q4. Why must a saddle point be simultaneously a row-minimum <i>and</i> a column-maximum, rather than just one or the other?</summary>
+<div class="card">Being only a row-minimum would just say "Player 2, given Player 1's row, can't do better than this by switching columns" — but says nothing about whether Player 1 wants to switch rows. Being only a column-maximum captures the symmetric, opposite half. A saddle point requires <i>both</i> simultaneously, because a genuine stable outcome (PSNE) needs <i>neither</i> player to have a profitable unilateral deviation — Player 1 shouldn't want to switch rows (needs column-max) and Player 2 shouldn't want to switch columns (needs row-min). Only checking one side would only rule out one player's incentive to deviate, not both.</div>
+</details>
+<details><summary>Q5. Can a matrix game have more than one saddle point with <i>different</i> payoff values?</summary>
+<div class="card">No. If \((s_1,s_2)\) and \((s_1',s_2')\) are both saddle points of the same matrix, they must have the <i>same</i> payoff value. Sketch of why: since \((s_1,s_2)\) is a saddle point, \(u(s_1,s_2)\ge u(s_1',s_2)\) (row-min property) and \(u(s_1,s_2')\ge u(s_1,s_2)\) is false the other way — more directly, by the PSNE Theorem every saddle point's value equals \(\overline v=\underline v\), a single number determined by the matrix alone (not by which particular saddle point you're looking at). Since \(\overline v\) and \(\underline v\) are fixed once the matrix is fixed, every saddle point must share that same common value.</div>
+</details>
+<details><summary>Q6. Explain intuitively why every saddle point of a given matrix must share the same payoff value.</summary>
+<div class="card">Think of \(\underline v\) as "the best floor Player 1 can lock in" and \(\overline v\) as "the best ceiling Player 2 can impose" — both are single numbers computed from the whole matrix, not from any particular cell. A saddle point exists exactly when floor and ceiling coincide (\(\overline v=\underline v\)), and every saddle point, by definition, must sit exactly at that shared floor-equals-ceiling value — there's only one such number for the matrix, so there's nowhere else for a second saddle point's value to be. Multiple saddle points just mean multiple <i>cells</i> happen to realize that same single value, not multiple distinct values.</div>
+</details>
+
+<h3>3.3 Maxmin and Minmax Values</h3>
+<details><summary>Q7. Explain in words (no formal proof) why \(\overline v \ge \underline v\) always holds.</summary>
+<div class="card">\(\underline v\) is the best guaranteed floor Player 1 can lock in by picking one fixed row and assuming the worst-case column response. \(\overline v\) is the best ceiling Player 2 can impose by picking one fixed column and assuming the worst-case row response. If \(\overline v\) were somehow <i>less</i> than \(\underline v\), it would mean Player 2 could cap Player 1's payoff below what Player 1 can already unilaterally guarantee themselves — a contradiction, since Player 1's guarantee holds against <i>any</i> response, including Player 2's supposedly-capping column. So the "floor" can never rise above the "ceiling."</div>
+</details>
+<details><summary>Q8. What does it mean, strategically, for a player if their maxmin value equals their actual equilibrium payoff?</summary>
+<div class="card">It means that player's "pessimistic, worst-case-assuming" security strategy turns out to also be their equilibrium best response — they don't need to know anything about what the opponent will actually do, because playing defensively/pessimistically already achieves the same outcome as playing optimally against the opponent's real (equilibrium) strategy. This is exactly the content of the PSNE Theorem: at a PSNE of a zero-sum game, each player's maxmin/minmax strategy coincides with their equilibrium strategy, so "play it safe" and "play optimally" give identical advice.</div>
+</details>
+<details><summary>Q9. If a matrix game's maxmin and minmax values are unequal, what happens if both players simultaneously play their own security (maxmin/minmax) strategies?</summary>
+<div class="card">The actual realized payoff \(u(s_1^*,s_2^*)\) will land somewhere in the interval \([\underline v,\overline v]\) — Player 1's maxmin strategy guarantees at least \(\underline v\) regardless of what Player 2 does (including Player 2's minmax strategy), and Player 2's minmax strategy guarantees Player 1 gets at most \(\overline v\) regardless of what Player 1 does. Since \(\underline v<\overline v\) here (no PSNE), the outcome isn't pinned to one exact number — both players' "safe" strategies only bound the result, they don't jointly determine a single stable prediction the way they would if \(\underline v=\overline v\). This is exactly the situation (Section 1.2/2.1) where no PSNE exists and the game requires mixed strategies to find a genuinely stable prediction.</div>
+</details>
+
+<h3>3.4 Mixed Strategies</h3>
+<details><summary>Q10. Why is expected utility under a mixed strategy computed as a sum over <i>all</i> pure strategy combinations, not just the ones "actually played"?</summary>
+<div class="card">A mixed strategy doesn't "actually play" any single pure strategy in advance — it's a probability distribution, and until the randomization is realized, every combination in the support is a genuine possible outcome. Expected utility is, by definition, the probability-weighted average over every possible realized outcome; leaving out any combination with positive joint probability would give an incomplete (and generally wrong) average, exactly the way you can't compute the expected value of a dice roll by only averaging over some of the six faces.</div>
+</details>
+<details><summary>Q11. The slides "overload" \(u_i\) to mean both the pure-strategy payoff and the mixed-strategy expected payoff. What property makes this notational reuse consistent rather than confusing?</summary>
+<div class="card">A pure strategy is mathematically just a degenerate mixed strategy — the distribution that places probability 1 on one action and 0 elsewhere. Plugging that degenerate distribution into the general expected-utility formula \(\sum_{s_1}\cdots\sum_{s_n}\sigma_1(s_1)\cdots\sigma_n(s_n)u_i(s_1,\ldots,s_n)\) collapses the sum to a single term (all other terms are multiplied by a 0 probability and vanish), recovering exactly the original pure-strategy payoff. Since the mixed-strategy formula reduces to the pure-strategy value in this special case, using the same symbol \(u_i\) for both is not an abuse of notation but a genuine mathematical consistency — the pure case is literally a special case of the mixed one.</div>
+</details>
+<details><summary>Q12. If a player's mixed strategy places probability 1 on one action, why should this reduce exactly to the pure-strategy case?</summary>
+<div class="card">This is the direct converse of Q11: with \(\sigma_i(s_i^\circ)=1\) for a specific \(s_i^\circ\) and \(\sigma_i(s_i)=0\) for every other \(s_i\), every term in the expected-utility sum involving any strategy other than \(s_i^\circ\) is multiplied by zero and drops out, leaving only the term where player \(i\) plays \(s_i^\circ\) — which is exactly the pure-strategy payoff definition. There's no separate "special-case logic" needed; it falls out automatically from the general formula, confirming that mixed strategies really are a strict generalization of pure strategies rather than a wholly different object.</div>
+</details>
+
+<h3>3.5 Mixed Strategy Nash Equilibrium (MSNE)</h3>
+<details><summary>Q13. Why does it suffice to check only pure deviations when verifying an MSNE, rather than checking all possible mixed deviations?</summary>
+<div class="card">Any mixed deviation \(\sigma_i\) has an expected payoff that is, by definition, a probability-weighted average of the payoffs from its constituent pure strategies (Theorem in §1.5, proved via the inequality chain \(u_i(\sigma_i,\sigma_{-i}^*)=\sum_{s_i}\sigma_i(s_i)u_i(s_i,\sigma_{-i}^*)\le\sum_{s_i}\sigma_i(s_i)u_i(\sigma_i^*,\sigma_{-i}^*)=u_i(\sigma_i^*,\sigma_{-i}^*)\)). A weighted average can never exceed the maximum of the values being averaged — so if no <i>pure</i> deviation beats \(\sigma_i^*\), then no <i>mixture</i> of pure deviations can beat it either, since that mixture's payoff is capped by the best pure deviation's payoff.</div>
+</details>
+<details><summary>Q14. Why is MSNE called the "weakest" equilibrium notion covered so far (per the Week 4 recap)?</summary>
+<div class="card">"Weakest" here means <i>least restrictive</i> — it requires the least amount of structure to guarantee existence, and it sits at the top of the strength hierarchy (SDSE \(\subseteq\) WDSE \(\subseteq\) PSNE \(\subseteq\) MSNE) as the most permissive notion covered by that point in the course. Every stronger notion (a dominant strategy, or a PSNE) is a special case of an MSNE, but MSNE additionally covers all the many finite games that have no PSNE at all — precisely because it relaxes "deterministic action" to "any probability distribution over actions." That extra flexibility is exactly what buys existence for every finite game (Nash 1951), at the cost of being a less sharply-predictive concept than the stronger notions when they do apply.</div>
+</details>
+<details><summary>Q15. Construct (or explain why you can't) a symmetric \(2\times2\) zero-sum game whose unique MSNE has both players playing exactly 50-50.</summary>
+<div class="card">This is easy to construct — the Penalty Shoot Game from the slides is exactly such an example: \(u=\begin{pmatrix}-1&1\\1&-1\end{pmatrix}\). By the symmetry of the matrix (swapping rows and columns leaves it unchanged), the indifference equations for both players work out identically, and solving them (as done in the slides) gives \(p^*=q^*=\tfrac12\) for both players — a genuinely symmetric fully-mixed MSNE. The key structural feature that forces exactly 50-50 here is the matrix's antisymmetry/skew structure (\(u(s_1,s_2)=-u(s_2,s_1)\) under the row\(\leftrightarrow\)column relabeling \(L\leftrightarrow L, R\leftrightarrow R\)), which makes the game "fair" in a precise sense — not every symmetric zero-sum game will give exactly 50-50 (that depends on the specific payoff numbers), but this construction always works whenever the off-diagonal and diagonal payoffs are set up antisymmetrically like this.</div>
+</details>
+
+<h3>3.6 Support &amp; Dominated Strategies in Mixed Strategies</h3>
+<details><summary>Q16. Why must every pure strategy in the support of an MSNE earn exactly the same payoff, rather than just each earning the maximum?</summary>
+<div class="card">If two strategies in the support earned <i>different</i> payoffs, the player could strictly improve by shifting all probability mass off the lower-paying one and onto the higher-paying one — contradicting that the original mixed strategy was already optimal. So being in the support at all (playing something with positive probability) forces indifference among everything in that support; "different but both still the best available" isn't a stable possibility, because the very act of comparing them would reveal a profitable reallocation of probability mass.</div>
+</details>
+<details><summary>Q17. If a pure strategy is <i>weakly</i> (not strictly) dominated, does the dominance theorem in the slides guarantee it gets probability zero in every MSNE?</summary>
+<div class="card">No — the theorem as stated requires <i>strict</i> domination by a mixed strategy to conclude the dominated pure strategy is played with probability zero in <b>every</b> MSNE. Under weak domination, the dominated strategy ties the dominating mixture in at least one scenario, so there can exist an MSNE where the "weakly worse" strategy is still played with positive probability (since playing it doesn't strictly hurt in that tied scenario). This is an important distinction: strict dominance gives an airtight elimination guarantee, but weak dominance only tells you there's <i>some</i> MSNE where it's unnecessary — not that it's excluded from all of them.</div>
+</details>
+<details><summary>Q18. Why does removing a strictly-dominated pure strategy from the strategy space never eliminate a genuine MSNE of the original game?</summary>
+<div class="card">By the dominance theorem, any MSNE of the original (larger) game already assigns probability zero to a strictly-dominated pure strategy — so removing that strategy from the game doesn't change the set of profiles that could possibly be equilibria; it only shrinks the space you have to search over. Every MSNE of the original game is still exactly representable in the reduced game (since the dominated strategy's probability was already zero), and no <i>new</i> equilibria are artificially created by deleting a strategy nobody was using anyway. This is exactly why the slides note it "can be applied to a smaller set of strategies... without loss of equilibrium."</div>
+</details>
+
+<h3>3.7 Computational Complexity of Finding an MSNE</h3>
+<details><summary>Q19. Why does the number of support profiles grow as \((2^{|S_1|}-1)\times(2^{|S_2|}-1)\times\cdots\) rather than simply \(2^{|S_1|+|S_2|+\cdots}\)?</summary>
+<div class="card">Each player independently chooses which <i>nonempty</i> subset of their own strategy set will be their support — a player with \(m\) strategies has \(2^m\) subsets total, minus the empty set (a support can't be empty, since some strategy must be played), giving \(2^m-1\) valid choices for that player alone. Because each player's support choice is independent of the others', the total number of joint support <i>profiles</i> is the product across players — not the sum implied by simply exponentiating the total strategy count \(|S_1|+|S_2|+\cdots\) (which would conflate "total strategies across all players" with "each player separately choosing a subset of their own strategies").</div>
+</details>
+<details><summary>Q20. Why is the MSNE feasibility program not a linear program in general, but becomes one for two-player zero-sum games?</summary>
+<div class="card">In general, the expected-utility term \(w_i=\sum_{s_{-i}}\big(\prod_{j\ne i}\sigma_j(s_j)\big)u_i(s_i,s_{-i})\) involves <i>products</i> of decision variables belonging to different players (\(n-1\) or more variables multiplied together for \(n\ge3\) players), which is nonlinear. For exactly two players, this product collapses to a single opponent's \(\sigma_j(s_j)\) terms — genuinely linear in the unknowns — and the maxmin/minmax duality from the zero-sum PSNE theory (Week 3 §1–2) further guarantees the resulting program can be solved as a linear program via LP duality (this is precisely how the two-player-zero-sum equilibria in this guide's problems were verified numerically). With three or more players, no such linear reformulation exists in general, which is part of why the general problem is PPAD-complete rather than polynomial-time solvable.</div>
+</details>
+<details><summary>Q21. What does "PPAD-complete" tell you about the relationship between "an equilibrium provably exists" and "we can efficiently compute it"?</summary>
+<div class="card">It tells you these are two entirely separate questions with two entirely separate answers. Nash's theorem (existence) is a pure <i>existence</i> proof via Brouwer's fixed point theorem — it guarantees a solution is out there, but the proof technique (a fixed point of a continuous map) gives no constructive, efficient recipe for finding it. PPAD-completeness is a statement about the <i>computational</i> question: finding that guaranteed-to-exist point is provably as hard as the hardest problems in the PPAD complexity class, and no polynomial-time algorithm is known (or believed likely) for the general case. So "the treasure is definitely buried somewhere on this island" (existence) and "here's how to dig straight to it in reasonable time" (efficient computation) are genuinely different guarantees, and MSNE only gives you the first one in general.</div>
+</details>
+
+<h3>3.8 The PSNE Theorem</h3>
+<details><summary>Q22. In the proof, why is the step \(u(s_1^*,s_2^*)\ge\max_{t_1\in S_1}u(t_1,s_2^*)\) — given that \((s_1^*,s_2^*)\) is a PSNE — obviously true?</summary>
+<div class="card">By the very definition of a PSNE, \(u(s_1^*,s_2^*)\ge u(s_1,s_2^*)\) for <i>every</i> \(s_1\in S_1\) — that's exactly what "Player 1 has no profitable unilateral deviation" means. Since this inequality holds for every single \(s_1\), it in particular holds for whichever \(s_1\) achieves the maximum of \(u(\cdot,s_2^*)\) over all of \(S_1\) — so \(u(s_1^*,s_2^*)\) is automatically at least as large as that maximum too. It's not an extra assumption; it's a direct restatement of the PSNE condition applied to the specific "best possible deviation" case.</div>
+</details>
+<details><summary>Q23. Why does the PSNE theorem's "if and only if" require proving both directions, rather than just one?</summary>
+<div class="card">The two directions say genuinely different things and neither implies the other automatically. "PSNE \(\Rightarrow\) \(\overline v=\underline v=u(s_1^*,s_2^*)\)" tells you that <i>if</i> a stable pure outcome exists, the security values must coincide at that outcome — a necessary condition. "\(\overline v=\underline v=u(s_1^*,s_2^*)\Rightarrow\) PSNE" tells you the reverse: that whenever the security values happen to coincide, the corresponding maxmin/minmax strategies automatically form a stable pure outcome — a sufficient condition. A theorem's biconditional isn't proven by symmetry or by accident; each implication uses a different piece of the definitions (one leans on the PSNE inequality directly, the other reconstructs the PSNE inequality from the equality of security values), so both legs genuinely need their own argument.</div>
+</details>
+<details><summary>Q24. Why does the corollary "\((s_1^*,s_2^*)\) is a PSNE" follow immediately once we know \(\overline v=\underline v=u(s_1^*,s_2^*)\)?</summary>
+<div class="card">This is exactly the content of the \((\Leftarrow)\) direction of the theorem's proof: once you know the security values coincide at that specific outcome, the proof directly derives \(u(s_1^*,s_2)\le\overline v=\underline v=u(s_1^*,s_2^*)\) for all \(s_2\), and symmetrically \(u(s_1,s_2^*)\ge u(s_1^*,s_2^*)\)... — wait, more precisely it derives that neither player can profit from deviating, which is the literal definition of PSNE. So the corollary isn't a separate fact requiring new work — it <i>is</i> the conclusion of the theorem's sufficiency direction, just restated as a standalone takeaway for convenience.</div>
+</details>
+
+<h3>3.9 The MSNE Characterization Theorem</h3>
+<details><summary>Q25. The proof relies on "a max equals a weighted average only when all values are equal." Where exactly does that fact get used?</summary>
+<div class="card">It's used in the \((\Rightarrow)\) direction to establish condition 1. Equation (1) in the proof shows \(u_i(\sigma_i^*,\sigma_{-i}^*)\) equals the <i>maximum</i> pure-strategy payoff over the support, \(\max_{s_i\in\delta(\sigma_i^*)}u_i(s_i,\sigma_{-i}^*)\). Equation (2) simultaneously shows the same quantity equals the <i>weighted average</i> \(\sum_{s_i\in\delta(\sigma_i^*)}\sigma_i^*(s_i)u_i(s_i,\sigma_{-i}^*)\), with strictly positive weights (since every \(s_i\) in the support has \(\sigma_i^*(s_i)>0\) by definition of support). A maximum can only equal a positive-weighted average of a set of numbers if every number in that set is identical to the maximum — if even one were strictly smaller, the weighted average would be strictly less than the max. That forces every payoff in the support to be equal, which is exactly condition 1.</div>
+</details>
+<details><summary>Q26. What would go wrong in solving for an MSNE if you only checked condition 1 (equal payoffs in the support) and skipped condition 2?</summary>
+<div class="card">Condition 1 alone only checks that the player is <i>indifferent among the strategies they're currently mixing over</i> — it says nothing about whether some strategy <i>outside</i> the support would actually be strictly better. You could solve the indifference equations perfectly and get a mathematically consistent set of probabilities, yet the resulting "equilibrium" could be undermined by a strategy nobody's playing that would actually pay off more — exactly the failure mode illustrated in the Hard problem's solution, where an initially plausible-looking support (e.g., Player 1's B row) had to be checked against condition 2 and was found to strictly beat the equalized value, invalidating that candidate support. Condition 2 is precisely the "off-support optimality" check that prevents you from mistaking a merely internally-consistent guess for a genuine equilibrium.</div>
+</details>
+<details><summary>Q27. How does the MSNE characterization theorem directly suggest the support-search algorithm from §1.7?</summary>
+<div class="card">The theorem reduces "is \((\sigma_1^*,\sigma_2^*)\) an MSNE?" to two very concrete, checkable conditions once you <i>fix a candidate support</i> for each player: (1) solve a system of linear indifference equations over that support (equal payoffs), and (2) verify a finite set of inequalities for everything outside the support. This gives a completely mechanical procedure: enumerate every possible support profile, solve the resulting (small) system of equations for that guess, and check the leftover inequalities — exactly the "Program" given in §1.7, run once per support profile. The theorem is what guarantees that solving this system on the correct support really does produce a genuine MSNE — without it, there'd be no principled way to even set up the equations to solve.</div>
+</details>
+
+<h3>3.10 Existence: Nash's Theorem &amp; Brouwer's Fixed Point Theorem</h3>
+<details><summary>Q28. Why does Nash's theorem need the strategy space to be the product of simplices \(\Delta S_1\times\cdots\times\Delta S_n\), rather than \(S_1\times\cdots\times S_n\) directly?</summary>
+<div class="card">The plain pure-strategy space \(S_1\times\cdots\times S_n\) is a finite, discrete set of points — it has no notion of "continuity" or "convexity" that Brouwer's theorem could act on (you can't continuously deform between two discrete points in a meaningful way, and there's no fixed-point guarantee for maps on finite discrete sets). The mixed-strategy space \(\Delta S_i\) is instead a continuous, convex, compact simplex (all probability distributions over \(S_i\)) — exactly the kind of "cup" shape Brouwer's theorem requires. Working in mixed strategies is precisely what converts a discrete combinatorial search problem into a continuous topological one where the fixed-point machinery becomes applicable at all.</div>
+</details>
+<details><summary>Q29. Explain, without symbols, why both convexity and compactness of the strategy space are necessary for Brouwer's theorem to apply.</summary>
+<div class="card">Compactness (closed and bounded) rules out the map "sliding" a point off toward infinity or toward a boundary point that isn't actually included in the set — without it, a continuous map could push every point steadily in one direction forever with no fixed point ever caught (e.g., simple shifting on the open interval \((0,1)\), or on all of \(\mathbb{R}\), has no fixed point). Convexity rules out "holes" or disconnected pieces that a continuous map could use to jump a point from one piece to another without ever landing back where it started (e.g., a rotation on a ring-shaped, non-convex region can have no fixed point at all). Brouwer's theorem genuinely needs both properties simultaneously — dropping either one gives easy counterexamples with no fixed point.</div>
+</details>
+<details><summary>Q30. If a game has infinitely many strategies per player (not finite), does Nash's theorem as stated guarantee an MSNE exists?</summary>
+<div class="card">Not as stated — the theorem in the slides is explicitly restricted to <b>finite games</b> (finite players, each with a finite strategy set), which is exactly what guarantees \(\Delta S_i\) is a finite-dimensional simplex, automatically compact and convex. With infinitely many pure strategies, \(\Delta S_i\) can fail to be compact in the relevant topology, and Brouwer's theorem (which is fundamentally a finite-dimensional Euclidean-space result) doesn't directly apply — proving existence for infinite strategy spaces generally requires stronger machinery (e.g., Glicksberg's or Kakutani's fixed point theorems under additional continuity/compactness assumptions on payoffs and strategy sets), and existence can genuinely fail without those extra conditions. So the finite-game restriction in the slides isn't a minor technicality — it's load-bearing for the specific proof technique being used.</div>
+</details>
+
+</section>
+
+<!-- ============================================================ -->
+<section id="problems">
+<h2>4. Practice Problem Set</h2>
+
+<div class="problem">
+<h3 style="margin-top:0">Problem 1 <span class="tag easy">Easy</span></h3>
+<p>Consider the matrix game (Player 1 payoffs shown; zero-sum):</p>
+<table>
+<tr><th></th><th>L</th><th>R</th></tr>
+<tr><th>T</th><td>5</td><td>2</td></tr>
+<tr><th>B</th><td>1</td><td>4</td></tr>
+</table>
+<p>(a) Compute the maxmin and minmax values. (b) Does a PSNE / saddle point exist? If so, state it.</p>
+</div>
+
+<div class="problem">
+<h3 style="margin-top:0">Problem 2 <span class="tag medium">Medium</span></h3>
+<p>Consider the zero-sum matrix game:</p>
+<table>
+<tr><th></th><th>L</th><th>R</th></tr>
+<tr><th>T</th><td>3</td><td>-2</td></tr>
+<tr><th>B</th><td>-1</td><td>4</td></tr>
+</table>
+<p>(a) Show that no PSNE exists. (b) Let Player 1 play T with probability \(p\) and Player 2 play L with probability \(q\). Using the MSNE characterization theorem (indifference condition), solve for the exact equilibrium probabilities \(p^*, q^*\) and the resulting expected value of the game.</p>
+</div>
+
+<div class="problem">
+<h3 style="margin-top:0">Problem 3 <span class="tag hard">Hard</span></h3>
+<p>Consider the following 3×3 zero-sum matrix game (Player 1 payoffs):</p>
+<table>
+<tr><th></th><th>L</th><th>C</th><th>R</th></tr>
+<tr><th>T</th><td>4</td><td>-2</td><td>1</td></tr>
+<tr><th>M</th><td>-1</td><td>3</td><td>2</td></tr>
+<tr><th>B</th><td>1</td><td>0</td><td>1</td></tr>
+</table>
+<p>(a) Check for a PSNE (there is none — verify this). (b) Show that strategy <b>B</b> is strictly dominated by a 50–50 mix of <b>T</b> and <b>M</b> for Player 1, and hence can be eliminated (probability zero in every MSNE) by the dominance theorem. (c) With the reduced 2×3 game, apply the support-based MSNE algorithm — set up the indifference equations and constraints — to find the full equilibrium: Player 1's mix over \(\{T,M\}\) and Player 2's mix over \(\{L,C,R\}\), including determining which of Player 2's strategies are actually in the support.</p>
+</div>
+
+</section>
+
+<!-- ============================================================ -->
+<section id="solutions">
+<h2>5. Solutions</h2>
+<p style="font-family:Arial,sans-serif;color:var(--muted);font-size:.9rem;">Click each problem to reveal the full step-by-step solution.</p>
+
+<details>
+<summary>Solution — Problem 1 (Easy)</summary>
+<div class="card">
+<p><b>Maxmin (Player 1):</b> row minimums: T → \(\min(5,2)=2\); B → \(\min(1,4)=1\). Maxmin \(=\max(2,1)=2\), achieved at T.</p>
+<p><b>Minmax (Player 2):</b> column maximums: L → \(\max(5,1)=5\); R → \(\max(2,4)=4\). Minmax \(=\min(5,4)=4\), achieved at R.</p>
+<p>Since \(\overline v = 4 \ne 2 = \underline v\), by the PSNE Theorem, <b>no PSNE / saddle point exists</b>. (Direct check: at (T,L)=5, Player 2 wants to switch to R → 2. At (T,R)=2, Player 1 wants to switch to B → 4. At (B,R)=4, Player 2 wants to switch to L → 1. At (B,L)=1, Player 1 wants to switch to T → 5. It cycles — no stable cell.)</p>
+</div>
+</details>
+
+<details>
+<summary>Solution — Problem 2 (Medium)</summary>
+<div class="card">
+<p><b>(a) No PSNE:</b> Row mins: T → \(\min(3,-2)=-2\); B → \(\min(-1,4)=-1\). Maxmin \(=\max(-2,-1)=-1\). Column maxes: L → \(\max(3,-1)=3\); R → \(\max(-2,4)=4\). Minmax \(=\min(3,4)=3\). Since \(-1 \ne 3\), no PSNE.</p>
+<p><b>(b) MSNE via indifference:</b> Let Player 1 play T w.p. \(p\), B w.p. \(1-p\). Player 2 must be made indifferent between L and R:
+\[
+u_2(\text{L}) = -[3p + (-1)(1-p)] ,\quad u_2(\text{R}) = -[-2p+4(1-p)]
+\]
+Equivalently, set Player 1's payoff column-wise equal for player 2's indifference condition — standard approach: Player 2 is indifferent iff Player 1's expected payoff is the same whether Player 2 plays L or R:
+\[
+3p + (-1)(1-p) = -2p + 4(1-p)
+\]
+\[
+3p - 1 + p = -2p + 4 - 4p \ \Rightarrow\ 4p - 1 = -6p + 4 \ \Rightarrow\ 10p = 5 \ \Rightarrow\ p^* = \tfrac12.
+\]
+<p>Now let Player 2 play L w.p. \(q\), R w.p. \(1-q\). Player 1 must be indifferent between T and B:
+\[
+3q + (-2)(1-q) = -1\cdot q + 4(1-q)
+\]
+\[
+3q - 2 + 2q = -q + 4 - 4q \ \Rightarrow\ 5q - 2 = -5q + 4 \ \Rightarrow\ 10q = 6 \ \Rightarrow\ q^* = \tfrac35.
+\]
+<p><b>Equilibrium:</b> \(\sigma_1^* = (T:\tfrac12,\ B:\tfrac12)\), \(\sigma_2^* = (L:\tfrac35,\ R:\tfrac25)\).</p>
+<p><b>Value of the game</b> (Player 1's expected payoff): using \(p^*=\tfrac12\) against \(q^*\):
+\[
+u_1 = q^*\big[p^*\cdot 3+(1-p^*)(-1)\big] + (1-q^*)\big[p^*(-2)+(1-p^*)4\big]
+\]
+\[
+= \tfrac35\big[\tfrac12(3)+\tfrac12(-1)\big] + \tfrac25\big[\tfrac12(-2)+\tfrac12(4)\big] = \tfrac35(1) + \tfrac25(1) = 1.
+\]
+<p>So the game's value is <b>1</b> (Player 1's expected payoff at equilibrium), consistent with it lying strictly between the maxmin (\(-1\)) and minmax (\(3\)) of the pure game, as it must.</p>
+</div>
+</details>
+
+<details>
+<summary>Solution — Problem 3 (Hard)</summary>
+<div class="card">
+<p><b>(a) No PSNE check:</b> Row minimums: T → \(\min(4,-2,1)=-2\); M → \(\min(-1,3,2)=-1\); B → \(\min(1,0,1)=0\). Maxmin \(=\max(-2,-1,0)=0\) (at B). Column maximums: L → \(\max(4,-1,1)=4\); C → \(\max(-2,3,0)=3\); R → \(\max(1,2,1)=2\). Minmax \(=\min(4,3,2)=2\) (at R). Since \(0 \ne 2\), <b>no PSNE</b>.</p>
+
+<p><b>(b) Dominance of B by a 50-50 mix of T and M:</b> Compute the mixed strategy's payoff column by column:
+\[
+\text{Mix}(T,M)=\left(\tfrac12,\tfrac12\right):\quad
+\text{vs L: } \tfrac12(4)+\tfrac12(-1)=1.5,\quad
+\text{vs C: } \tfrac12(-2)+\tfrac12(3)=0.5,\quad
+\text{vs R: } \tfrac12(1)+\tfrac12(2)=1.5
+\]
+<p>Compare to B's payoffs \((1,0,1)\): \(1.5>1\), \(0.5>0\), \(1.5>1\) — <b>strictly greater in every column</b>. So the 50-50 mix of T and M strictly dominates B, and by the dominance theorem, <b>B is played with probability zero in every MSNE.</b> We may safely drop row B and work with the reduced \(2\times3\) game:</p>
+<table><tr><th></th><th>L</th><th>C</th><th>R</th></tr><tr><th>T</th><td>4</td><td>-2</td><td>1</td></tr><tr><th>M</th><td>-1</td><td>3</td><td>2</td></tr></table>
+
+<p><b>(c) Support search on the reduced game.</b> With only two rows, Player 1's support is automatically \(\{T,M\}\) (a single row alone can't be part of a genuinely mixed equilibrium here, since with 2 rows and 3 columns Player 2 will always be able to punish a pure row — we verify this is consistent below). The open question is <b>which subset of \(\{L,C,R\}\)</b> is in Player 2's support. Try the natural guess \(\delta(\sigma_2)=\{L,C\}\) (\(q_R=0\)) first.</p>
+
+<p><b>Player 2 indifferent between L and C</b>, given Player 1 plays \((p, 1-p)\) on \((T,M)\):
+\[
+u_1(\text{vs }L)=4p+(-1)(1-p)=5p-1,\qquad u_1(\text{vs }C)=-2p+3(1-p)=3-5p
+\]
+\[
+5p-1=3-5p\ \Rightarrow\ 10p=4\ \Rightarrow\ p^*=\tfrac{2}{5}=0.4,\qquad 1-p^*=0.6
+\]
+
+<p><b>Player 1 indifferent between T and M</b>, given Player 2 plays \((q,1-q,0)\) on \((L,C,R)\):
+\[
+u_1(T)=4q-2(1-q)=6q-2,\qquad u_1(M)=-q+3(1-q)=3-4q
+\]
+\[
+6q-2=3-4q\ \Rightarrow\ 10q=5\ \Rightarrow\ q^*=\tfrac12,\qquad 1-q^*=\tfrac12
+\]
+
+<p><b>Verify condition 2 (nothing outside the support does better):</b></p>
+<p>• For Player 1, check the eliminated row B against \(\sigma_2^*=(\tfrac12,\tfrac12,0)\): \(u_1(B)=1(\tfrac12)+0(\tfrac12)+1(0)=0.5\). The equalized value on \(\{T,M\}\) is \(6(\tfrac12)-2=1\). Since \(0.5 < 1\), B is indeed worse — consistent with the dominance result in (b). ✓</p>
+<p>• For Player 2, check the excluded column R against \(\sigma_1^*=(0.4,0.6)\): \(u_1(R)=1(0.4)+2(0.6)=1.6\). The equalized value on \(\{L,C\}\) is \(5(0.4)-1=1\). Since \(1.6>1\), column R gives Player 1 a <i>strictly higher</i> payoff than the equalized value — which is <i>bad</i> for Player 2 (a minimizer). So Player 2 correctly avoids R. ✓</p>
+
+<p>Both condition-2 checks pass, so this support profile is valid.</p>
+
+<div class="card def" style="margin-top:1rem;">
+<b>Final Equilibrium:</b>
+\[
+\sigma_1^* = \left(T:\ 0.4,\ \ M:\ 0.6,\ \ B:\ 0\right), \qquad \sigma_2^* = \left(L:\ 0.5,\ \ C:\ 0.5,\ \ R:\ 0\right)
+\]
+<b>Value of the game</b> (Player 1's expected payoff) \(= 1\).
+</div>
+
+<p style="font-family:Arial,sans-serif;font-size:.9rem;color:var(--muted);">Note the general lesson from part (a)/(b)/(c) together: the dominance check <i>shrinks</i> the support search space (here from a \(3\times3\) to a \(2\times3\) game), but the remaining support (which of Player 2's <i>three</i> columns are actually used) still had to be found by trial-and-verify against condition 2 — exactly the exhaustive character that makes MSNE-finding PPAD-complete in general.</p>
+</div>
+</details>
+
+</section>
+
+</main>
+<footer>CS 6001 · Game Theory and Algorithmic Mechanism Design · Week 3 Study Module</footer>
+</body>
+</html>
