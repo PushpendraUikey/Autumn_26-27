@@ -42,6 +42,25 @@ void drawLine(int x1, int y1, int x2, int y2) {
     }
 }
 
+// old Bresenham's line drawing algorithm implementation
+void line(int x0, int x1, int y0, int y1) {
+    int deltax = x1 - x0;
+    int deltay = y1 - y0;
+    float error = 0.0;
+    float deltaerr = deltay / deltax; // deltax != 0 assumed
+
+    int y = y0;
+    for (int x = x0; x <= x1; x++) {
+        plot(x, y); // plot the pixel at (x, y)
+        error += deltaerr;
+        if (error >= 0.5) {
+            y += 1;
+            error -= 1.0;
+        }
+
+    }
+}
+
 int main() {
     std::cout << "--- Test 1: Gentle positive slope (Octant 1) ---\n";
     std::cout << "Drawing from (0,0) to (5,2)\n";
