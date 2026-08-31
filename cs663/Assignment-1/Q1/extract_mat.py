@@ -9,6 +9,6 @@ orig_img = mat_contents['original']
 sub_img = mat_contents['subsampled']
 
 # Export them to CSV so C++ can read them
-np.savetxt('temp/ct_original.csv', orig_img, delimiter=',')
-np.savetxt('temp/ct_subsampled.csv', sub_img, delimiter=',')
+np.savetxt('temp/1_f_ct_original.csv', orig_img, delimiter=',')
+np.savetxt('temp/1_f_ct_subsampled.csv', sub_img, delimiter=',')
 print("MAT file extracted successfully!")
