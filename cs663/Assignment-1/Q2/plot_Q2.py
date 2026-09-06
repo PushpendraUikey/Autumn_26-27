@@ -11,9 +11,6 @@ os.makedirs('output_img', exist_ok=True)
 # ==========================================
 
 def save_formatted_plot(images, titles, filepath, cmap='gray', colorbar_mode='individual', vmin=None, vmax=None, max_cols=2):
-    """
-    General helper to plot 1 or more images in a grid, satisfying formatting rules.
-    """
     n = len(images)
     cols = min(n, max_cols)
     rows = math.ceil(n / cols)
@@ -31,7 +28,7 @@ def save_formatted_plot(images, titles, filepath, cmap='gray', colorbar_mode='in
         
         if i < n:
             img, title = images[i], titles[i]
-            # using cmap='gray' satisfies the 200+ intensity grayscale requirement[cite: 3]
+            # using cmap='gray'
             im = ax.imshow(img, cmap=cmap, aspect='equal', vmin=vmin, vmax=vmax)
             ims.append(im)
             ax.set_title(title)
@@ -40,7 +37,7 @@ def save_formatted_plot(images, titles, filepath, cmap='gray', colorbar_mode='in
             ax.set_ylabel("Pixel Units (Y)")
             
             if colorbar_mode == 'individual':
-                # The assignment explicitly requires a colorbar alongside grayscale images[cite: 3]
+                # colorbar alongside grayscale images
                 fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
         else:
             ax.axis('off')
@@ -61,18 +58,19 @@ def plot_thresholding_results(image_filename):
     """Loads CSVs and generates Part 2 plots for a specific image."""
     base_name = image_filename.split('.')[0]
     
-    # 1. Load Original Image
+    # Original Image
     orig_img = plt.imread(f'./data/{image_filename}')
     
     if orig_img.dtype == np.float32 or orig_img.dtype == np.float64:
         orig_img = (orig_img * 255).astype(np.uint8)
         
     if orig_img.ndim == 3: 
-        orig_img = orig_img[:, :, 0] # Convert RGB to grayscale
+        # RGB to grayscale using standard luminance weights
+        orig_img = 0.299 * orig_img[:, :, 0] + 0.587 * orig_img[:, :, 1] + 0.114 * orig_img[:, :, 2]
         
     H, W = orig_img.shape
 
-    # 2. Load C++ Generated CSVs
+    # Generated CSVs
     try:
         man = np.loadtxt(f'temp/{base_name}_manual.csv', delimiter=',').reshape((H, W))
         otsu = np.loadtxt(f'temp/{base_name}_otsu.csv', delimiter=',').reshape((H, W))
@@ -82,18 +80,18 @@ def plot_thresholding_results(image_filename):
         print(f"Warning: CSV files for {base_name} not found. Skipping plot generation.")
         return
 
-    # 3. Generate Part 2(a) Plots (Manual)
+    # 2(a) Plots (Manual)
     save_formatted_plot([orig_img, man], 
                         ["Original", "Manual Thresholding"], 
                         f'output_img/2_a_op_{base_name}_manual.png')
 
-    # 4. Generate Part 2(b) Plots (Otsu)
+    # 2(b) Plots (Otsu)
     save_formatted_plot([orig_img, otsu], 
                         ["Original", "Otsu Thresholding"], 
                         f'output_img/2_b_op_{base_name}_otsu.png')
 
-    # 5. Generate Part 2(c) Plots (Adaptive + Threshold Map)[cite: 3]
-    # We set max_cols=3 so the Original, Thresholded, and Map appear in a single row
+    # 2(c) Plots (Adaptive + Threshold Map)
+    # max_cols=3 so the Original, Thresholded, and Map appear in a single row
     save_formatted_plot([orig_img, adapt_bin, adapt_map], 
                         ["Original", "Adaptive Thresholding", "Per-Pixel Threshold Map"], 
                         f'output_img/2_c_op_{base_name}_adaptive.png', 
@@ -107,5 +105,5 @@ if __name__ == "__main__":
     for img_file in images_to_process:
         plot_thresholding_results(img_file)
         print(f"Generated plots for {img_file}")
-        
+    
     print("All Q2 plots saved to 'output_img/'.")
