@@ -7,8 +7,6 @@
 #include <sstream> 
 #include <numeric>
 
-using namespace std;
-
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
@@ -69,9 +67,6 @@ void exportImageToCSV(const std::vector<float>& image, int width, int height, in
     outFile.close();
 }
 
-// ==========================================
-// Q2 ALGORITHMS WILL GO HERE
-// ==========================================
 
 // ==========================================
 // 2(a): Manual Thresholding
@@ -111,15 +106,15 @@ std::vector<float> myOtsuThresholding(const std::vector<float>& image, int W, in
     for (int t = 0; t < 256; ++t) {
         wB += hist[t];               // Weight Background
         if (wB == 0) continue;
-        wF = totalPixels - wB;       // Weight Foreground[cite: 2]
+        wF = totalPixels - wB;       // Weight Foreground
         if (wF == 0) break;
 
         sumB += static_cast<float>(t * hist[t]);
         
-        float mB = sumB / wB;            // Mean Background[cite: 2]
-        float mF = (sumTotal - sumB) / wF; // Mean Foreground[cite: 2]
+        float mB = sumB / wB;            // Mean Background
+        float mF = (sumTotal - sumB) / wF; // Mean Foreground
 
-        // Between-class variance formula[cite: 2]
+        // Between-class variance formula
         float varBetween = static_cast<float>(wB) * static_cast<float>(wF) * (mB - mF) * (mB - mF);
 
         if (varBetween > varMax) {
@@ -135,52 +130,6 @@ std::vector<float> myOtsuThresholding(const std::vector<float>& image, int W, in
 // ==========================================
 // 2(c): Local / Adaptive Thresholding (Niblack)
 // ==========================================
-// The assignment requires displaying the threshold map[cite: 3].
-// We will return a pair: {Binarized_Image, Threshold_Map}
-// std::pair<std::vector<float>, std::vector<float>> myAdaptiveThresholding(
-//     const std::vector<float>& image, int W, int H, int windowSize, float k, bool invert) {
-    
-//     std::vector<float> binarized(W * H);
-//     std::vector<float> thresholdMap(W * H);
-//     int offset = windowSize / 2;
-
-//     for (int y = 0; y < H; ++y) {
-//         for (int x = 0; x < W; ++x) {
-//             float sum = 0.0f, sqSum = 0.0f;
-//             int count = 0;
-
-//             // Extract local neighborhood statistics
-//             for (int wy = -offset; wy <= offset; ++wy) {
-//                 for (int wx = -offset; wx <= offset; ++wx) {
-//                     int ny = std::max(0, std::min(H - 1, y + wy));
-//                     int nx = std::max(0, std::min(W - 1, x + wx));
-//                     float val = image[ny * W + nx];
-//                     sum += val;
-//                     sqSum += val * val;
-//                     count++;
-//                 }
-//             }
-
-//             float mean = sum / count;
-//             float variance = (sqSum / count) - (mean * mean);
-//             float stddev = std::sqrt(std::max(0.0f, variance));
-
-//             // Niblack's threshold formula: T = mean + k * stddev[cite: 2]
-//             float T = mean + k * stddev;
-//             thresholdMap[y * W + x] = T;
-
-//             bool isText = (image[y * W + x] < T);
-//             if (invert) isText = (image[y * W + x] > T);
-
-//             binarized[y * W + x] = isText ? 0.0f : 255.0f; // Text=Black, BG=White[cite: 3]
-//         }
-//     }
-//     return {binarized, thresholdMap};
-// }
-
-// ==========================================
-// 2(c): Local / Adaptive Thresholding (Optimized with Integral Images)
-// ==========================================
 std::pair<std::vector<float>, std::vector<float>> myAdaptiveThresholding(
     const std::vector<float>& image, int W, int H, int windowSize, float k, bool invert) {
     
@@ -188,8 +137,7 @@ std::pair<std::vector<float>, std::vector<float>> myAdaptiveThresholding(
     std::vector<float> thresholdMap(W * H);
     int offset = windowSize / 2;
 
-    // 1. Pre-compute Integral Images (Sum and Squared Sum)[cite: 2]
-    // Using double to prevent precision loss and overflow on large images
+    // Pre-compute Integral Images (Sum and Squared Sum)
     std::vector<double> intSum(W * H, 0.0);
     std::vector<double> intSqSum(W * H, 0.0);
 
@@ -198,11 +146,11 @@ std::pair<std::vector<float>, std::vector<float>> myAdaptiveThresholding(
             double val = image[y * W + x];
             double sqVal = val * val;
 
-            // Fetch previous integral values[cite: 2]
+            // previous integral values
             double A = (x > 0 && y > 0) ? intSum[(y - 1) * W + (x - 1)] : 0.0;
             double B = (y > 0) ? intSum[(y - 1) * W + x] : 0.0;
             double C = (x > 0) ? intSum[y * W + (x - 1)] : 0.0;
-            intSum[y * W + x] = val + B + C - A; // I(x,y) = i(x,y) + I(x,y-1) + I(x-1,y) - I(x-1,y-1)[cite: 2]
+            intSum[y * W + x] = val + B + C - A; // I(x,y) = i(x,y) + I(x,y-1) + I(x-1,y) - I(x-1,y-1)
 
             double sqA = (x > 0 && y > 0) ? intSqSum[(y - 1) * W + (x - 1)] : 0.0;
             double sqB = (y > 0) ? intSqSum[(y - 1) * W + x] : 0.0;
@@ -211,19 +159,19 @@ std::pair<std::vector<float>, std::vector<float>> myAdaptiveThresholding(
         }
     }
 
-    // 2. Compute local thresholds in O(1) time per pixel
+    // local thresholds in O(1) time per pixel
     for (int y = 0; y < H; ++y) {
         for (int x = 0; x < W; ++x) {
-            // Determine the boundaries of the local window
+            // boundaries of the local window
             int y_min = std::max(0, y - offset);
             int y_max = std::min(H - 1, y + offset);
             int x_min = std::max(0, x - offset);
             int x_max = std::min(W - 1, x + offset);
 
-            // Compute area of this specific window (edges have smaller areas)
+            // area of this specific window (edges have smaller areas)
             double count = (x_max - x_min + 1) * (y_max - y_min + 1);
 
-            // Fetch sums from Integral Images: Sum = D - B - C + A[cite: 2]
+            // Fetch sums from Integral Images: Sum = D - B - C + A
             double D = intSum[y_max * W + x_max];
             double B = (y_min > 0) ? intSum[(y_min - 1) * W + x_max] : 0.0;
             double C = (x_min > 0) ? intSum[y_max * W + (x_min - 1)] : 0.0;
@@ -239,18 +187,14 @@ std::pair<std::vector<float>, std::vector<float>> myAdaptiveThresholding(
 
             // Compute Statistics
             double mean = sum / count;
-            double variance = (sqSum / count) - (mean * mean); // Var(X) = E[X^2] - (E[X])^2[cite: 2]
+            double variance = (sqSum / count) - (mean * mean); // Var(X) = E[X^2] - (E[X])^2
             double stddev = std::sqrt(std::max(0.0, variance)); // Max safeguards against floating point errors
 
             // Niblack's threshold formula
-            // float T = static_cast<float>(mean + k * stddev);
-            // Sauvola's threshold formula: T = mean + mean * k * ((stddev / R) - 1)
-            // R is the dynamic range of standard deviation (typically 128 for 8-bit images)
-            float R = 128.0f;
-            float T = static_cast<float>(mean + mean * k * ((stddev / R) - 1.0f));
+            float T = static_cast<float>(mean + k * stddev);
             thresholdMap[y * W + x] = T;
 
-            // Apply binarization logic
+            // binarization logic
             bool isText = (image[y * W + x] < T);
             if (invert) isText = (image[y * W + x] > T);
 
@@ -262,10 +206,7 @@ std::pair<std::vector<float>, std::vector<float>> myAdaptiveThresholding(
 }
 
 
-// ==========================================
-// MAIN EXECUTION
-// ==========================================
-// Add this struct definition right above int main()
+
 struct ThresholdConfig {
     std::string filename;
     bool invert;
@@ -275,20 +216,19 @@ struct ThresholdConfig {
 };
 
 int main() {
-    // Define the processing configurations for all 4 images
-    // Note: You will need to manually tune manualThresh, adaptWindowSize, and adaptK for your final report!
+
     std::vector<ThresholdConfig> configs = {
-        {"receipt.png", false, 100.0f, 31, -0.2f},
-        {"blackboard.png", true,  100.0f, 31, -0.2f}, // Invert is true because text is lighter than background[cite: 3]
-        {"lilavati.png", false, 100.0f, 31, -0.2f},
-        {"qr.png", false, 100.0f, 31, -0.2f}
+        {"receipt.png", false, 130.0f, 161, -0.8f},
+        {"blackboard.png", true,  55.0f, 81, 0.5f},
+        {"lilavati.png", false, 105.0f, 101, -0.7f},
+        {"qr.png", false, 115.0f, 91, -0.2f}
     };
 
     for (const auto& config : configs) {
         int W, H, ch;
         std::string filepath = "./data/" + config.filename;
         
-        // Extract base name (e.g., "receipt" from "receipt.png")
+        // for output file
         size_t dotPos = config.filename.find_last_of('.');
         std::string baseName = config.filename.substr(0, dotPos);
 
