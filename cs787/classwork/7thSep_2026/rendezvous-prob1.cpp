@@ -14,16 +14,18 @@ then let them run in parallel and see what happens. - Great way to understand th
 
 mutex m;
 condition_variable cv;
+bool work_done = false;
 
 void f (int id) {
 	unique_lock<mutex> l(m);
-	if (id!=0) cv.wait(l);
+	if (id!=0) cv.wait(l, []{return work_done;});
 	else {
 		for (int i=0;i<4;i++){
 			cout << i << endl;
 			// this_thread::sleep_for(300ms);
 		}
 	}
+	work_done = true;
 	cv.notify_all();
 };
 
