@@ -11,15 +11,16 @@ int f(int x) {
 	if (x==1) {
 		cout << this_thread::get_id()<<":" << x << endl;
 		this_thread::sleep_for(300ms);
+		m.unlock();
 		return 1;
 	}
 	else {
 		tmp = x+f(x-1);
 		cout << this_thread::get_id()<<":" << tmp << endl;
 		this_thread::sleep_for(300ms);
+		m.unlock();
 		return (tmp);
 	}
-	m.unlock();
 };
 
 int main () {
