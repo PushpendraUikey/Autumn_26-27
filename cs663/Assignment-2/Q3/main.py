@@ -1,5 +1,6 @@
 import numpy as np
 from scipy import ndimage
+import utils
 
 # ------------------ Q3 Canny Edge Detection ------------------ #
 # PHASE1 : Guassian noise suppression function
@@ -116,3 +117,17 @@ def double_threshold_and_hysterisis(suppressed: np.ndarray, t_low: float, t_high
                     stack.append((ny, nx))
 
     return final_edges
+
+def canny_edge_detector(image: np.ndarray, sigma: float, t_low: float, t_high: float) -> tuple:
+    """
+    Canny Edge Detection pipeline execution
+    """
+    smoothed = apply_guassian_smoothing(image, sigma)
+
+    mag, direction = compute_gradients(smoothed)
+
+    nms = non_maximum_suppression(mag, direction)
+
+    final_edges = double_threshold_and_hysterisis(nms, t_low, t_high)
+
+    return mag, nms, final_edges
