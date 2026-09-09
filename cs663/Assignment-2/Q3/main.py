@@ -43,3 +43,43 @@ def compute_gradients(smoothed_img: np.ndarray) -> tuple [np.ndarray, np.ndarray
         magnitude = (magnitude / magnitude.max())
 
     return magnitude, direction
+
+# PHASE3 : Non-Maximum Suppression
+def non_maximum_suppression(magnitude: np.ndarray, direction: np.ndarray) -> np.ndarray:
+    """
+    Non Maximum Suppression -> Thins edges by suppressing pixels that are not local maxima 
+    in the direction of gradient.
+    """
+    h, w = magnitude.shape
+    suppressed = np.zeros((h, w), dtype=np.float64)
+
+    for i in range(1, h-1):
+        for j in range(1, w-1):
+            q = 255
+            r = 255
+            angle = direction[i,j]
+            mag = magnitude[i,j]
+
+            # edge is vertical (0 degrees). Check left and right pixels
+            if (0 <= angle < 22.5) or (157.5 <= angle <= 180):
+                q = magnitude[i, j+1]
+                r = magnitude[i, j-1]
+            # edge is diagonal (-45 degrees). Check top-right and bottom-left 
+            elif (22.5 <= angle < 67.5):
+                q = magnitude[i+1, j-1]
+                r = magnitude[i-1, j+1]
+            # edge is horizontal (90 degrees). Check top and bottom pixels
+            elif (67.5 <= angle < 112.5):
+                q = magnitude[i+1, j]
+                r = magnitude[i-1, j]
+            # edge is diagonal (45 degrees). Check top-left and bottom-right
+            elif (112.5 <= angle < 157.5):
+                q = magnitude[i-1, j-1]
+                r = magnitude[i+1, j+1]
+
+            if (magnitude[i,j] >= q) and (magnitude[i,j] >= r):
+                suppressed[i,j] = mag
+            else:
+                suppressed[i,j] = 0
+
+    return suppressed
