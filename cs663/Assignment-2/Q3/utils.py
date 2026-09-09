@@ -100,3 +100,19 @@ def save_ncc_grid(ncc_r: np.ndarray, ncc_g: np.ndarray, ncc_b: np.ndarray,
     plt.tight_layout()
     plt.savefig(save_path, bbox_inches='tight')
     plt.close()
+
+def save_canny_stages(orig: np.ndarray, mag:np.ndarray, nms:np.ndarray, final:np.ndarray,
+                      title: str, save_path: str):
+    fig, axes = plt.subplots(1, 4, figsize=(20, 5))
+    images = [orig, mag, nms, final]
+    titles = ["Original Image", "Gradient Magnitude", "Non-Maximum Suppression", "Final Edges"]
+
+    for ax, img, title in zip(axes, images, titles):
+        ax.imshow(img, cmap='gray')
+        ax.set_title(title)
+        ax.axis("off")
+
+    plt.suptitle(title, fontsize=14)
+    plt.tight_layout()
+    plt.savefig(save_path, bbox_inches='tight', dpi=300)
+    plt.close()
