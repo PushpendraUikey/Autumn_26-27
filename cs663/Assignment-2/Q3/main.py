@@ -83,3 +83,36 @@ def non_maximum_suppression(magnitude: np.ndarray, direction: np.ndarray) -> np.
                 suppressed[i,j] = 0
 
     return suppressed
+
+# PHASE4 : Double Thresholding & Edge Tracking by Hysteresis
+def double_threshold_and_hysterisis(suppressed: np.ndarray, t_low: float, t_high: float) -> np.ndarray:
+    """
+    Applies double thresholding and edge tracking by hysteresis to the suppressed image.
+    """
+    h, w = suppressed.shape
+    final_edges = np.zeros((h,w), dtype=np.float64)
+
+    strong_y, strong_x = np.where(suppressed >= t_high)
+
+    is_weak = np.zeros((h,w), dtype=bool)
+    is_weak[(suppressed >= t_low) & (suppressed < t_high)] = True
+
+    final_edges[strong_y, strong_x] = 1.0
+
+    stack = list(zip(strong_y, strong_x)) # dfs seeds
+
+    neighbors = [(-1, -1), (-1, 0), (-1, 1)
+                 (0, -1),           (0, 1),
+                 (1, -1),  (1, 0),  (1, 1)]
+    while stack:
+        y, x = stack.pop()
+
+        for dy, dx in neighbors:
+            ny, nx = y+dy, x+dx
+
+            if 0 <= ny < h and 0 <= nx < w:
+                if is_weak[ny, nx] and final_edges[ny, nx] == 0.0:
+                    final_edges[ny, nx] = 1.0
+                    stack.append((ny, nx))
+
+    return final_edges
