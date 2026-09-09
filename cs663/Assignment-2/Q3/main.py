@@ -1,5 +1,6 @@
 import numpy as np
 from scipy import ndimage
+import os
 import utils
 
 # ------------------ Q3 Canny Edge Detection ------------------ #
@@ -131,3 +132,30 @@ def canny_edge_detector(image: np.ndarray, sigma: float, t_low: float, t_high: f
     final_edges = double_threshold_and_hysterisis(nms, t_low, t_high)
 
     return mag, nms, final_edges
+
+if __name__ == "__main__":
+    base_path = "../data/edge/"
+    output_path = "./output/"
+    os.makedirs(output_path, exist_ok = True)
+
+    canny_params = {
+        "butterfly.png" : { "sigma":1.0, "t_low":0.05, "t_high":0.15 },
+        "paithaniEdge.png" : { "sigma":1.5, "t_low":0.05, "t_high":0.2 },
+        "rangoli.png" : { "sigma":1, "t_low":0.05, "t_high":0.15 },
+    }
+
+    for img_name, params in canny_params.items():
+        print(f"Processing Canny Edge Detection for : {img_name}")
+        img_path = os.path.join(base_path, img_name)
+        image = utils.load_image(img_path, is_gray=True)
+
+        sigma = params["sigma"]
+        t_low = params["t_low"]
+        t_high = params["t_high"]
+
+        mag, nms, final_edges = canny_edge_detector(image, sigma, t_low, t_high)
+
+        title = f"{img_name} | sigma={sigma}, t_low={t_low}, t_high={t_high}"
+        save_file = os.path.join(output_path, f"Q3_canny_{img_name}")
+
+        utils.save_canny_stages(image, mag, nms, final_edges, title, save_file)
