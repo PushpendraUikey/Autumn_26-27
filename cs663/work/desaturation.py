@@ -51,6 +51,15 @@ def desaturate_image(image: np.ndarray, s: float) -> np.ndarray:
     else:
         raise ValueError("Input image must be an RGB image with shape (H, W, 3).")
 
+def adjust_saturation(img: np.ndarray, s: float) -> np.ndarray:
+    if img.ndim == 3 and img.shape[2] == 3:
+        A = np.mean(img, axis=2, keepdims=True)
+        final_img = s * img + (1 - s) * A
+        return np.clip(final_img, 0, 255).astype(img.dtype)
+
+    else:
+        raise ValueError("Input image must be an RGB image with shape (H, W, 3).")
+
 if __name__ == "__main__":
     base_path = "./data/"
     output_path = "./output/"
@@ -63,7 +72,11 @@ if __name__ == "__main__":
             img_path = os.path.join(base_path, img)
             image = load_image(img_path, as_gray=False)
 
-            s = 0.5  # Desaturation factor
-            desaturated_image = desaturate_image(image, s)
+            s1 = 0.3  # Desaturation factor
+            desaturated_image = desaturate_image(image, s1)
+            s2 = 0.3  # Adjustment factor
+            adjusted_image = adjust_saturation(image, s2)
             save_image_path = os.path.join(output_path, f"desaturated_{img}")
-            save_img_comparison(image, desaturated_image, f"Desaturated (s={s})", save_image_path)
+            save_img_comparison(image, desaturated_image, f"Desaturated (s={s1})", save_image_path)
+            save_image_path = os.path.join(output_path, f"adjusted_{img}")
+            save_img_comparison(image, adjusted_image, f"Adjusted (s={s2})", save_image_path)
