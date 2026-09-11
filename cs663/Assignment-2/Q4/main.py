@@ -53,20 +53,53 @@ def aggregate_tensor_components(Ixx: np.ndarray, Iyy: np.ndarray, Ixy: np.ndarra
     
     return Sxx, Syy, Sxy
 
-def detect_corners_and_edges(image: np.ndarray, pre_smoothing_sigma: float = 1.0, window_sigma: float = 1.5):
+def compute_eigenvalues(Sxx: np.ndarray, Syy: np.ndarray, Sxy: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    """
+    Computes the largest (lambda_1) and smallest (lambda_2) eigenvalues 
+    for the 2x2 Structure Tensor at each pixel using the closed-form solution.
+    """
+    mean = (Sxx + Syy) / 2.0
+    diff = (Sxx - Syy) / 2.0
+    
+    discriminant = np.sqrt(diff**2 + Sxy**2)
+    
+    # lambda_1 is guaranteed to be >= lambda_2 because discriminant is always >= 0
+    lambda_1 = mean + discriminant
+    lambda_2 = mean - discriminant
+    
+    return lambda_1, lambda_2
+
+def calculate_corner_scores(lambda_1: np.ndarray, lambda_2: np.ndarray, 
+                            Sxx: np.ndarray, Syy: np.ndarray, Sxy: np.ndarray, 
+                            k: float = 0.04) -> tuple[np.ndarray, np.ndarray]:
+    """
+    Calculates both Shi-Tomasi and Harris-Stephens scoring measures.
+    """
+    # Shi-Tomasi Measure: The minimum eigenvalue
+    shi_tomasi_score = lambda_2
+    
+    # Harris-Stephens Measure: det(M) - k * (trace(M))^2
+    det_M = (Sxx * Syy) - (Sxy**2)
+    trace_M = Sxx + Syy
+    harris_score = det_M - k * (trace_M**2)
+    
+    return shi_tomasi_score, harris_score
+
+def detect_corners_and_edges(image: np.ndarray, pre_smoothing_sigma: float = 1.0, 
+                             window_sigma: float = 1.5, k: float = 0.04):
     if image.ndim > 2:
         raise ValueError("Feature detection requires a 2D grayscale image.")
         
-    # --- Stage 1: Preprocessing ---
-    smoothed_image = apply_gaussian_smoothing(image, sigma=pre_smoothing_sigma)
+    # --- Stage 1 & 2: Preprocessing and Gradients ---
+    smoothed = apply_gaussian_smoothing(image, sigma=pre_smoothing_sigma)
+    Ix, Iy = compute_image_gradients(smoothed)
     
-    # --- Stage 2: Gradients ---
-    Ix, Iy = compute_image_gradients(smoothed_image)
-    
-    # --- Stage 3: Raw Structure Tensor Components ---
+    # --- Stage 3 & 4: Tensor Components and Aggregation ---
     Ixx, Iyy, Ixy = compute_tensor_components(Ix, Iy)
-    
-    # --- Stage 4: Windowed Aggregation ---
     Sxx, Syy, Sxy = aggregate_tensor_components(Ixx, Iyy, Ixy, window_sigma)
     
-    return Sxx, Syy, Sxy
+    # --- Stage 5: Eigen-decomposition and Scoring ---
+    lambda_1, lambda_2 = compute_eigenvalues(Sxx, Syy, Sxy)
+    shi_tomasi, harris = calculate_corner_scores(lambda_1, lambda_2, Sxx, Syy, Sxy, k)
+    
+    return lambda_1, lambda_2, shi_tomasi, harris
