@@ -1,0 +1,956 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Digital Image Acquisition — CS-663 Masterclass</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#14100D;
+    --bg-alt:#191410;
+    --card:#1D1712;
+    --card-2:#221B15;
+    --border:#372C22;
+    --border-soft:#2A231C;
+    --text:#F1E7D8;
+    --text-dim:#B9AA97;
+    --text-faint:#8B7C6A;
+    --safelight:#E0503F;
+    --safelight-dim:#8A3428;
+    --safelight-glow:#E0503F1a;
+    --amber:#E7A23A;
+    --amber-dim:#8A6423;
+    --phosphor:#7FCBA4;
+    --phosphor-dim:#3E6E54;
+    --font-display:'Fraunces', serif;
+    --font-body:'Inter', sans-serif;
+    --font-mono:'IBM Plex Mono', monospace;
+  }
+
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:var(--font-body);
+    line-height:1.7;
+    font-size:16.5px;
+  }
+
+  .wrap{max-width:760px;margin:0 auto;padding:0 24px 120px;}
+
+  /* ============ HERO ============ */
+  .hero{
+    position:relative;
+    padding:100px 24px 70px;
+    text-align:center;
+    border-bottom:1px solid var(--border-soft);
+    background:
+      radial-gradient(ellipse 700px 300px at 50% 0%, var(--safelight-glow), transparent 70%),
+      var(--bg);
+    overflow:hidden;
+  }
+  .hero-eyebrow{
+    font-family:var(--font-mono);
+    font-size:12.5px;
+    letter-spacing:0.18em;
+    text-transform:uppercase;
+    color:var(--amber);
+    margin-bottom:18px;
+  }
+  .hero h1{
+    font-family:var(--font-display);
+    font-weight:600;
+    font-size:clamp(34px,6vw,54px);
+    line-height:1.08;
+    margin:0 0 18px;
+    letter-spacing:-0.01em;
+  }
+  .hero p.sub{
+    font-size:17px;
+    color:var(--text-dim);
+    max-width:520px;
+    margin:0 auto;
+  }
+  .hero-rig{width:100%;max-width:560px;margin:48px auto 0;}
+  .hero-rig svg{width:100%;height:auto;display:block;}
+
+  /* ============ NAV ============ */
+  .toc{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px 6px;
+    justify-content:center;
+    padding:26px 24px 0;
+    max-width:760px;
+    margin:0 auto;
+  }
+  .toc a{
+    font-family:var(--font-mono);
+    font-size:12px;
+    color:var(--text-faint);
+    text-decoration:none;
+    border:1px solid var(--border);
+    padding:6px 12px;
+    border-radius:20px;
+    transition:border-color .15s, color .15s;
+    white-space:nowrap;
+  }
+  .toc a:hover{border-color:var(--safelight-dim);color:var(--amber);}
+
+  /* ============ SECTIONS ============ */
+  section{padding:70px 0 8px;border-bottom:1px solid var(--border-soft);}
+  section:last-of-type{border-bottom:none;}
+
+  .eyebrow{
+    font-family:var(--font-mono);
+    font-size:12px;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:var(--safelight);
+    margin-bottom:10px;
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+  .eyebrow .num{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    width:22px;height:22px;
+    border-radius:50%;
+    border:1px solid var(--safelight-dim);
+    color:var(--amber);
+    font-size:11px;
+  }
+
+  h2{
+    font-family:var(--font-display);
+    font-weight:600;
+    font-size:30px;
+    margin:0 0 22px;
+    letter-spacing:-0.01em;
+  }
+  h3{
+    font-family:var(--font-display);
+    font-weight:600;
+    font-size:20px;
+    margin:34px 0 14px;
+    color:var(--text);
+  }
+  p{color:var(--text-dim);margin:0 0 16px;}
+  strong{color:var(--text);font-weight:600;}
+  em.callout{color:var(--amber);font-style:normal;}
+
+  ul, ol{color:var(--text-dim);padding-left:22px;margin:0 0 16px;}
+  li{margin-bottom:6px;}
+  li::marker{color:var(--safelight-dim);}
+
+  a{color:var(--amber);}
+
+  /* ============ ANALOGY BOX ============ */
+  .analogy{
+    background:var(--card-2);
+    border-left:3px solid var(--amber-dim);
+    border-radius:0 10px 10px 0;
+    padding:16px 20px;
+    margin:22px 0;
+  }
+  .analogy .tag{
+    font-family:var(--font-mono);
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:0.1em;
+    color:var(--amber);
+    margin-bottom:6px;
+    display:block;
+  }
+  .analogy p{color:var(--text-dim);margin:0;}
+
+  .idea{
+    background:var(--card);
+    border:1px solid var(--border-soft);
+    border-radius:10px;
+    padding:16px 20px;
+    margin:22px 0;
+  }
+  .idea .tag{
+    font-family:var(--font-mono);
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:0.1em;
+    color:var(--phosphor);
+    margin-bottom:6px;
+    display:block;
+  }
+  .idea p{margin:0;color:var(--text-dim);}
+
+  /* ============ MATH BLOCK ============ */
+  .math{
+    background:#100D0A;
+    border:1px solid var(--border);
+    border-radius:8px;
+    padding:16px 20px;
+    margin:18px 0;
+    font-family:var(--font-mono);
+    font-size:14.5px;
+    color:var(--phosphor);
+    overflow-x:auto;
+    white-space:pre;
+    line-height:1.65;
+  }
+
+  /* ============ TABLE ============ */
+  table{
+    width:100%;
+    border-collapse:collapse;
+    margin:20px 0;
+    font-size:14.5px;
+  }
+  th, td{
+    text-align:left;
+    padding:10px 14px;
+    border-bottom:1px solid var(--border-soft);
+    color:var(--text-dim);
+  }
+  th{
+    font-family:var(--font-mono);
+    font-size:11.5px;
+    text-transform:uppercase;
+    letter-spacing:0.06em;
+    color:var(--amber);
+    font-weight:500;
+  }
+  td:first-child, th:first-child{color:var(--text);font-weight:500;}
+
+  /* ============ QUICK-CHECK / BRUSH-UP ============ */
+  .brushup{
+    margin:34px 0 10px;
+    background:linear-gradient(180deg, #201410 0%, #1A1310 100%);
+    border:1px solid var(--safelight-dim);
+    border-radius:12px;
+    overflow:hidden;
+  }
+  .brushup-head{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:14px 20px;
+    font-family:var(--font-mono);
+    font-size:12.5px;
+    letter-spacing:0.1em;
+    text-transform:uppercase;
+    color:var(--safelight);
+    border-bottom:1px solid var(--border-soft);
+  }
+  .brushup-head .dot{
+    width:8px;height:8px;border-radius:50%;
+    background:var(--safelight);
+    box-shadow:0 0 8px var(--safelight);
+  }
+  .qcard{border-bottom:1px solid var(--border-soft);}
+  .qcard:last-child{border-bottom:none;}
+  .qcard summary{
+    cursor:pointer;
+    list-style:none;
+    padding:15px 20px;
+    display:flex;
+    gap:12px;
+    align-items:flex-start;
+    color:var(--text);
+    font-size:15px;
+    font-weight:500;
+  }
+  .qcard summary::-webkit-details-marker{display:none;}
+  .qcard summary::before{
+    content:"?";
+    font-family:var(--font-mono);
+    color:var(--amber);
+    flex-shrink:0;
+    width:18px;height:18px;
+    border:1px solid var(--amber-dim);
+    border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    font-size:11px;
+    margin-top:2px;
+  }
+  .qcard[open] summary::before{content:"–";background:var(--amber-dim);color:var(--text);}
+  .qcard .answer{
+    padding:0 20px 18px 50px;
+    color:var(--text-dim);
+    font-size:14.5px;
+  }
+  .qcard .answer p{margin:0 0 8px;color:var(--text-dim);}
+  .qcard .answer p:last-child{margin-bottom:0;}
+
+  /* ============ PROBLEM CARDS ============ */
+  .problem{
+    background:var(--card);
+    border:1px solid var(--border-soft);
+    border-radius:12px;
+    padding:26px 26px 20px;
+    margin:26px 0;
+  }
+  .problem-head{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-bottom:14px;
+  }
+  .level{
+    font-family:var(--font-mono);
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:0.08em;
+    padding:4px 10px;
+    border-radius:20px;
+    font-weight:500;
+  }
+  .level.easy{background:#2A3A22;color:#B4E08C;}
+  .level.medium{background:#3A2E12;color:var(--amber);}
+  .level.hard{background:#3A1712;color:#F0897B;}
+  .problem-head h3{margin:0;font-size:18px;}
+
+  .solutions-gate{
+    text-align:center;
+    padding:50px 24px;
+    margin:40px 0;
+    border:1px dashed var(--border);
+    border-radius:14px;
+    background:var(--bg-alt);
+  }
+  .solutions-gate .lock{font-size:28px;margin-bottom:14px;display:block;}
+  .solutions-gate p{color:var(--text-faint);font-family:var(--font-mono);font-size:13px;letter-spacing:0.04em;margin:0;}
+
+  details.solution{
+    background:var(--card);
+    border:1px solid var(--phosphor-dim);
+    border-radius:12px;
+    padding:0;
+    margin:20px 0;
+    overflow:hidden;
+  }
+  details.solution summary{
+    cursor:pointer;
+    list-style:none;
+    padding:18px 24px;
+    font-family:var(--font-display);
+    font-weight:600;
+    font-size:17px;
+    color:var(--text);
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+  }
+  details.solution summary::-webkit-details-marker{display:none;}
+  details.solution summary .reveal{
+    font-family:var(--font-mono);
+    font-size:11px;
+    color:var(--phosphor);
+    text-transform:uppercase;
+    letter-spacing:.08em;
+    border:1px solid var(--phosphor-dim);
+    padding:4px 10px;
+    border-radius:20px;
+  }
+  details.solution .sol-body{
+    padding:0 24px 24px;
+    border-top:1px solid var(--border-soft);
+  }
+  details.solution .sol-body p{margin-top:16px;}
+
+  /* ============ PIPELINE ============ */
+  .pipeline{
+    display:flex;
+    flex-direction:column;
+    gap:0;
+    margin:30px 0;
+  }
+  .pstep{
+    display:flex;
+    gap:18px;
+    padding:16px 0;
+    border-bottom:1px solid var(--border-soft);
+  }
+  .pstep:last-child{border-bottom:none;}
+  .pstep .pnum{
+    font-family:var(--font-mono);
+    color:var(--safelight);
+    font-size:13px;
+    width:24px;
+    flex-shrink:0;
+    padding-top:2px;
+  }
+  .pstep .ptext strong{display:block;color:var(--text);margin-bottom:3px;font-size:15px;}
+  .pstep .ptext span{color:var(--text-faint);font-size:13.5px;}
+
+  footer{
+    text-align:center;
+    padding:60px 24px 40px;
+    color:var(--text-faint);
+    font-family:var(--font-mono);
+    font-size:12.5px;
+    letter-spacing:0.04em;
+  }
+
+  @media (max-width:600px){
+    .hero{padding:70px 20px 50px;}
+    section{padding:50px 0 4px;}
+    h2{font-size:25px;}
+  }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-eyebrow">CS-663 · Digital Image Processing · Week 2</div>
+  <h1>Digital Image<br>Acquisition</h1>
+  <p class="sub">From photons in the real world to the matrix of numbers on your screen — a full walkthrough of how a picture becomes data.</p>
+  <div class="hero-rig">
+    <svg viewBox="0 0 560 220" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Diagram of a pinhole camera: an upright arrow outside a dark box projects an inverted arrow inside, through a single pinhole aperture.">
+      <line x1="30" y1="60" x2="30" y2="30" stroke="#E0503F" stroke-width="3" stroke-linecap="round"/>
+      <polygon points="30,22 24,34 36,34" fill="#E0503F"/>
+      <line x1="30" y1="60" x2="30" y2="160" stroke="#8A7A66" stroke-width="1.5"/>
+      <rect x="230" y="40" width="280" height="140" fill="none" stroke="#372C22" stroke-width="2" rx="4"/>
+      <line x1="230" y1="110" x2="238" y2="110" stroke="#E7A23A" stroke-width="3"/>
+      <circle cx="234" cy="110" r="2.5" fill="#E7A23A"/>
+      <line x1="30" y1="30" x2="234" y2="110" stroke="#E0503F" stroke-opacity="0.55" stroke-width="1.3"/>
+      <line x1="30" y1="30" x2="234" y2="110" stroke="#E0503F" stroke-opacity="0.55" stroke-width="1.3"/>
+      <line x1="30" y1="160" x2="234" y2="110" stroke="#E0503F" stroke-opacity="0.55" stroke-width="1.3"/>
+      <line x1="234" y1="110" x2="470" y2="165" stroke="#E0503F" stroke-opacity="0.85" stroke-width="1.6"/>
+      <line x1="234" y1="110" x2="470" y2="65" stroke="#E0503F" stroke-opacity="0.85" stroke-width="1.6"/>
+      <line x1="470" y1="65" x2="470" y2="165" stroke="#7FCBA4" stroke-width="3" stroke-linecap="round"/>
+      <polygon points="470,172 464,160 476,160" fill="#7FCBA4"/>
+      <text x="30" y="185" fill="#8B7C6A" font-family="IBM Plex Mono, monospace" font-size="11" text-anchor="middle">scene</text>
+      <text x="234" y="30" fill="#E7A23A" font-family="IBM Plex Mono, monospace" font-size="11" text-anchor="middle">pinhole (f)</text>
+      <text x="470" y="200" fill="#8B7C6A" font-family="IBM Plex Mono, monospace" font-size="11" text-anchor="middle">image plane (inverted)</text>
+    </svg>
+  </div>
+</div>
+
+<nav class="toc">
+  <a href="#basics">1 · Image basics</a>
+  <a href="#formation">2 · Pinhole camera</a>
+  <a href="#vanishing">3 · Vanishing points</a>
+  <a href="#sensing">4 · Sensing &amp; Bayer</a>
+  <a href="#sampling">5 · Sampling &amp; quantization</a>
+  <a href="#color">6 · Color spaces</a>
+  <a href="#practice">7 · Practice set</a>
+  <a href="#solutions">8 · Solutions</a>
+</nav>
+
+<div class="wrap">
+
+<!-- ============ 1. IMAGE BASICS ============ -->
+<section id="basics">
+  <div class="eyebrow"><span class="num">1</span>Core concepts</div>
+  <h2>Digital images as functions</h2>
+
+  <div class="idea">
+    <span class="tag">Big idea</span>
+    <p>A digital image is a <strong>function</strong>. Forget "picture" — think of it as a machine that takes a <em class="callout">location</em> and returns a <em class="callout">value</em>.</p>
+  </div>
+
+  <ul>
+    <li><strong>Domain = space</strong> — the coordinates you can plug in. A 2D photograph has a 2D grid domain; a 3D medical scan (CT/MRI volume) has a 3D grid domain.</li>
+    <li><strong>Range = what comes out</strong> — scalar or vector. Black-and-white photo → scalar. Color photo → vector <code>[R, G, B]</code>. Video → a function of space <em>and</em> time.</li>
+  </ul>
+
+  <div class="analogy">
+    <span class="tag">Analogy</span>
+    <p>A digital image is like a spreadsheet of temperature readings across a city. Each cell (domain = lat/long grid) holds a temperature (range = scalar). A color photo is the same spreadsheet, except each cell holds three readings instead of one — like temperature, humidity, and wind speed all at once.</p>
+  </div>
+
+  <p><strong>Colormaps</strong> are a paint-by-numbers lookup table — the same scalar data array can be visualized very differently depending on the colormap applied. The data never changes, only its translation into color.</p>
+
+  <h3>RGB vs. multispectral vs. hyperspectral</h3>
+  <table>
+    <tr><th>Type</th><th>Bands</th><th>Analogy</th></tr>
+    <tr><td>RGB</td><td>3</td><td>Tasting a dish and noting sweet, sour, salty only</td></tr>
+    <tr><td>Multispectral</td><td>~4–15</td><td>Also noting bitter and umami</td></tr>
+    <tr><td>Hyperspectral</td><td>Hundreds</td><td>Running a full chemical assay on the dish</td></tr>
+  </table>
+  <p>A hyperspectral image is really a <strong>cube</strong>: two spatial dimensions plus a spectral dimension. Slicing at one wavelength gives an ordinary grayscale image; stacking all slices gives every pixel's full spectral fingerprint.</p>
+
+  <div class="brushup">
+    <div class="brushup-head"><span class="dot"></span>Brush-up — image basics</div>
+    <details class="qcard">
+      <summary>What are the domain and range of a color video?</summary>
+      <div class="answer"><p>Domain = space <em>and</em> time (2D pixel grid across a sequence of frames). Range = a vector, the RGB triplet at each space-time coordinate.</p></div>
+    </details>
+    <details class="qcard">
+      <summary>Does changing a colormap change the underlying image data?</summary>
+      <div class="answer"><p>No. A colormap is only a lookup table for <em>visualizing</em> scalar data — the stored values are untouched; only their color translation changes.</p></div>
+    </details>
+    <details class="qcard">
+      <summary>Why can hyperspectral imaging reveal things RGB cannot?</summary>
+      <div class="answer"><p>RGB collapses the whole visible spectrum into just 3 broad bands. Hyperspectral samples hundreds of narrow bands across the spectrum, capturing fine spectral signatures (e.g. material composition) that get averaged away in RGB.</p></div>
+    </details>
+  </div>
+</section>
+
+<!-- ============ 2. IMAGE FORMATION ============ -->
+<section id="formation">
+  <div class="eyebrow"><span class="num">2</span>Image formation</div>
+  <h2>The pinhole camera</h2>
+
+  <h3>Camera obscura — nature's first camera</h3>
+  <p>In Latin, <em>camera obscura</em> means <strong>"dark chamber."</strong> It's a natural phenomenon: light rays passing through a tiny hole into a dark space form an image where they strike a surface — no lens required.</p>
+
+  <div class="analogy">
+    <span class="tag">Why does the image flip?</span>
+    <p>A ray leaving the <em>top</em> of a tree outside travels in a straight line, passes through the pinhole, and — unable to bend — keeps going straight, landing near the <em>bottom</em> of the back wall. A ray from the bottom of the tree lands near the top. Result: the projection is <strong>inverted</strong> (up↔down) <strong>and reversed</strong> (left↔right).</p>
+  </div>
+
+  <p>This happens by accident in real buildings — a hole in a tiled roof at Prague Castle has projected the outside world onto an attic wall. Artists in the 1700s–1800s even carried <strong>portable camera-obscura tents</strong> into the field, tracing the projected (inverted) scene to sketch with perfect perspective.</p>
+
+  <h3>The geometry: 3D world to 2D image</h3>
+  <p>Set up the pinhole camera: the <strong>pinhole</strong> sits at the origin <code>O = (0,0,0)</code>; the <strong>image plane</strong> sits a distance <code>f</code> (focal length, f &gt; 0) behind it. A world point has coordinates <code>(x1, x2, x3)</code>; its projection has 2D coordinates <code>(y1, y2)</code>.</p>
+
+  <div class="analogy">
+    <span class="tag">Analogy</span>
+    <p>The pinhole is a strict bouncer at a club door: every ray must pass through that one exact point to get "in." Once through, it travels straight until it hits the back wall. Because <em>all</em> rays funnel through one point, the geometry becomes pure similar-triangles trigonometry.</p>
+  </div>
+
+  <p>Using similar triangles, for a scene point with <code>x3 &gt; 0</code>, the real (inverted) image plane gives:</p>
+  <div class="math">y1 = -f · x1 / x3
+y2 = -f · x2 / x3</div>
+  <p>Every point along the ray from O through P projects to this <em>same</em> <code>(y1, y2)</code> — an entire 3D ray collapses onto a single 2D point. This is <strong>perspective projection</strong>.</p>
+
+  <h3>The virtual image plane</h3>
+  <p>Working with inverted coordinates is annoying for analysis, so we place a <strong>virtual image plane</strong> a distance <code>f</code> in <em>front</em> of the pinhole instead of behind it. This flips the signs and avoids the inversion entirely during analysis:</p>
+  <div class="math">y1 = f · x1 / x3
+y2 = f · x2 / x3</div>
+
+  <div class="analogy">
+    <span class="tag">Analogy</span>
+    <p>It's like designing a video-game camera. You could simulate light literally flipping onto a wall behind the lens — or symbolically place your "screen" in front of the camera and skip un-flipping everything later. Same math, friendlier bookkeeping.</p>
+  </div>
+
+  <h3>A small but powerful detour: homogeneous coordinates</h3>
+  <p>Ordinary <code>(x, y)</code> coordinates can't represent points at infinity — but perspective projection cares about exactly such points (parallel lines "meeting" far away, sunlight arriving as parallel rays).</p>
+  <p><strong>The trick:</strong> represent a 2D point <code>(x, y)</code> as the whole family <code>{(x·S : y·S : S) for any nonzero scale S}</code>. To recover the point: given <code>(p : q : r)</code>, the actual point is <code>(p/r, q/r)</code>.</p>
+  <p>Take a line through the origin, points <code>(bt, -at)</code>. Its homogeneous coordinates are <code>(bt : -at : 1) ~ (b : -a : 1/t)</code>. As <code>t → ∞</code>, this becomes <code>(b : -a : 0)</code> — a well-defined coordinate for "infinity" that ordinary <code>(x, y)</code> could never express.</p>
+
+  <div class="analogy">
+    <span class="tag">Analogy</span>
+    <p>It's like adding a "zoom level" dial (<code>S</code>) to your coordinate system. Zoom all the way out to <code>S = 0</code> and you can still meaningfully talk about <em>which direction</em> you were heading — even though you never quite arrive.</p>
+  </div>
+
+  <h3>Perspective projection properties</h3>
+  <ol>
+    <li><strong>Straight lines → straight lines.</strong> A planar surface in 3D, sliced by the image plane, produces a straight line segment in 2D.</li>
+    <li><strong>Spheres → ellipses</strong> (in general) — a ball photographed off-center doesn't project to a perfect circle.</li>
+  </ol>
+
+  <h3>Pinhole limitations — and why we use lenses</h3>
+  <ul>
+    <li><strong>Small pinhole</strong> → sharp image, but very dark.</li>
+    <li><strong>Large pinhole</strong> → brighter image, but blurry.</li>
+  </ul>
+  <p>Real cameras replace the pinhole with a <strong>lens</strong>: lighter, sharp, <em>and</em> bright, because a lens gathers light from a wide area and still focuses it to a point. A thin, symmetric lens approximates pinhole geometry, but doesn't perfectly model geometric distortion or the fact that different colors refract slightly differently through glass.</p>
+
+  <h3>Field of view</h3>
+  <p><strong>Field of view (FOV)</strong> is the angular extent of the world a camera can see. Human vision spans roughly <strong>120° horizontally</strong> (binocular) by <strong>60° vertically</strong> (central). As you zoom a lens in, FOV reduces.</p>
+
+  <div class="brushup">
+    <div class="brushup-head"><span class="dot"></span>Brush-up — pinhole camera</div>
+    <details class="qcard">
+      <summary>Why is the camera-obscura image inverted both vertically and horizontally?</summary>
+      <div class="answer"><p>Light travels in straight lines through the single pinhole. A ray from the top of the scene must cross to the bottom of the image plane to keep going straight, and a ray from the left crosses to the right — giving both a vertical and horizontal flip simultaneously.</p></div>
+    </details>
+    <details class="qcard">
+      <summary>What problem does the "virtual image plane" solve, and does it change the physics?</summary>
+      <div class="answer"><p>It doesn't change the physics at all — it's a bookkeeping convenience. Placing the plane symbolically in front of the pinhole flips the sign of y1 and y2, letting you work with positive, non-inverted coordinates during analysis.</p></div>
+    </details>
+    <details class="qcard">
+      <summary>Why do we need homogeneous coordinates at all for perspective projection?</summary>
+      <div class="answer"><p>Because ordinary Euclidean coordinates cannot represent "points at infinity" — and vanishing points, parallel rays, and points that recede to infinity are central to perspective geometry. Homogeneous coordinates give those points a well-defined algebraic representation.</p></div>
+    </details>
+  </div>
+</section>
+
+<!-- ============ 3. VANISHING POINTS ============ -->
+<section id="vanishing">
+  <div class="eyebrow"><span class="num">3</span>Perspective geometry</div>
+  <h2>Vanishing points</h2>
+
+  <p>Everyone has seen this: train tracks running toward the horizon appear to converge to a single point. Let's prove why.</p>
+
+  <p>Take a 3D line parametrized by <code>t</code>:</p>
+  <div class="math">x1(t) = d1 + a·t
+x2(t) = d2 + b·t
+x3(t) = d3 + c·t</div>
+
+  <p>Its perspective projection:</p>
+  <div class="math">y1(t) = (d1 + a·t) · f / (d3 + c·t)
+y2(t) = (d2 + b·t) · f / (d3 + c·t)</div>
+
+  <p>As <code>t → ∞</code>, the offsets <code>(d1, d2, d3)</code> — where the line starts — cancel out entirely:</p>
+  <div class="math">y1(t) → a·f / c
+y2(t) → b·f / c        (assuming c ≠ 0)</div>
+
+  <div class="idea">
+    <span class="tag">The punchline</span>
+    <p>Any line with direction <code>(a, b, c)</code> — regardless of where it starts in 3D — projects to the exact same vanishing point <code>(af/c, bf/c)</code>. Only <em>direction</em> matters, never position.</p>
+  </div>
+
+  <div class="analogy">
+    <span class="tag">Analogy</span>
+    <p>Two friends walk in exactly the same compass direction from different houses. From a satellite view directly above, their paths look parallel and never meet. From a low camera far ahead of them on the ground, both paths appear to converge to the same point on the horizon — because what matters to the 2D view is their shared <em>direction</em>, not their different starting positions.</p>
+  </div>
+
+  <p><strong>Bonus proof — the projected path really is a straight line.</strong> Differentiating <code>y1(t)</code> and <code>y2(t)</code> shows the slope <code>dy2/dy1</code> is <strong>independent of t</strong> — meaning the projected curve has constant slope everywhere, i.e. it's a straight line.</p>
+
+  <h3>Special case: c = 0</h3>
+  <p>When <code>c = 0</code>, the line is parallel to the image plane (<code>x3</code> stays constant). Here there is <strong>no vanishing point</strong> — the projected slope equals <code>b/a</code>, the same as the 3D line's own slope, so parallel 3D lines project to parallel 2D lines that never meet (think of horizontal fence rails running left-right in front of you, staying parallel in the photo).</p>
+
+  <div class="brushup">
+    <div class="brushup-head"><span class="dot"></span>Brush-up — vanishing points</div>
+    <details class="qcard">
+      <summary>Do two parallel lines starting at very different 3D locations share the same vanishing point?</summary>
+      <div class="answer"><p>Yes — as long as they have the same direction (a, b, c). The vanishing point formula af/c, bf/c depends only on direction, never on the offsets d1, d2, d3.</p></div>
+    </details>
+    <details class="qcard">
+      <summary>Under what condition does a set of parallel 3D lines have no vanishing point at all?</summary>
+      <div class="answer"><p>When c = 0, i.e. the lines run parallel to the image plane itself. Then they project to parallel 2D lines that never converge.</p></div>
+    </details>
+    <details class="qcard">
+      <summary>What does it mean, geometrically, that dy2/dy1 is independent of t?</summary>
+      <div class="answer"><p>It means the slope of the projected curve is constant at every point along it — which is exactly the definition of a straight line. This is why perspective projection always maps 3D straight lines to 2D straight lines.</p></div>
+    </details>
+  </div>
+</section>
+
+<!-- ============ 4. SENSING & BAYER ============ -->
+<section id="sensing">
+  <div class="eyebrow"><span class="num">4</span>Hardware</div>
+  <h2>Image sensing &amp; Bayer filters</h2>
+
+  <h3>From photons to numbers</h3>
+  <p>Modern cameras use one of two sensor technologies, both built on <strong>MOSFET</strong> technology:</p>
+  <ul>
+    <li><strong>CCD</strong> — Charge-Coupled Device</li>
+    <li><strong>CMOS</strong> — Active-Pixel Sensor</li>
+  </ul>
+  <p>Both do the same job: convert <strong>photon hits → electric current → voltage</strong>, across a 2D array of light-sensitive elements. On a CCD specifically, the image is projected through a lens onto a capacitor array — each capacitor accumulates charge in direct proportion to the light intensity falling on it.</p>
+
+  <div class="analogy">
+    <span class="tag">Analogy</span>
+    <p>Picture a grid of rain buckets left out in a storm. Each bucket (capacitor/pixel) collects rainwater (photons) for a fixed period. A bucket under a heavy downpour (bright light) fills far more than one under a drizzle (dim light). At the end, you measure the water level — that's your brightness value.</p>
+  </div>
+
+  <h3>Color separation: the Bayer filter</h3>
+  <p>A bare capacitor can't tell <em>what color</em> photon it absorbed — only <em>how many</em>. The fix: overlay a mosaic of tiny color filters, one per sensor element — a <strong>Bayer pattern</strong> (Bryce Bayer, Eastman Kodak, 1975). The most common layout is <strong>RGGB</strong>:</p>
+  <div class="math">R  G
+G  B</div>
+  <p>repeated across the entire sensor.</p>
+
+  <div class="idea">
+    <span class="tag">Why twice as many green elements?</span>
+    <p>The pattern mimics human eye physiology — we're far more sensitive to green wavelengths, which sit closest to the peak of our luminance perception. Dedicating 50% of sensor elements to green captures the most perceptually important detail at the highest resolution.</p>
+  </div>
+
+  <div class="analogy">
+    <span class="tag">Analogy</span>
+    <p>If you're staffing 4 quality inspectors and know "brightness defects" get noticed 60% of the time versus 20% each for "redness" and "blueness" defects, you'd staff 2 inspectors on brightness and 1 each on the rest — exactly what RGGB does for green vs. red/blue.</p>
+  </div>
+
+  <p>After capture, each sensor location knows only <em>one</em> of R, G, B. Two paths forward: (1) accept a lower-resolution RGB image directly, or (2) <strong>demosaic / de-Bayer</strong> — interpolate the two missing channels at every pixel from neighboring readings, producing full-resolution RGB.</p>
+
+  <div class="brushup">
+    <div class="brushup-head"><span class="dot"></span>Brush-up — sensing &amp; Bayer</div>
+    <details class="qcard">
+      <summary>What physical quantity does a CCD capacitor actually accumulate, and what does it accumulate in proportion to?</summary>
+      <div class="answer"><p>It accumulates electric charge, in direct proportion to the light intensity (number of photons) falling on that capacitor.</p></div>
+    </details>
+    <details class="qcard">
+      <summary>Why can't a raw sensor element measure color directly, and what's the fix?</summary>
+      <div class="answer"><p>A capacitor only measures how much light hit it, not its wavelength/color. The fix is placing a mosaic of tiny colored filters (a Bayer pattern) over the sensor array, so each element only receives light already filtered to one color band.</p></div>
+    </details>
+    <details class="qcard">
+      <summary>In an RGGB Bayer pattern, what has to happen before you get a full-resolution RGB image?</summary>
+      <div class="answer"><p>Demosaicing (de-Bayering) — interpolating the two missing color channels at every pixel location using neighboring sensor readings.</p></div>
+    </details>
+  </div>
+</section>
+
+<!-- ============ 5. SAMPLING & QUANTIZATION ============ -->
+<section id="sampling">
+  <div class="eyebrow"><span class="num">5</span>Discretization</div>
+  <h2>Sampling vs. quantization</h2>
+  <p>These two concepts get mixed up constantly — keep them strictly separate.</p>
+
+  <table>
+    <tr><th></th><th>Spatial sampling</th><th>Intensity quantization</th></tr>
+    <tr><td>What's limited?</td><td>Where you measure (domain)</td><td>What values a measurement can take (range)</td></tr>
+    <tr><td>Cause</td><td>Finite number of sensor elements</td><td>Finite bits per pixel</td></tr>
+    <tr><td>Failure mode</td><td>Moiré patterns, aliasing</td><td>Banding, posterization</td></tr>
+  </table>
+
+  <h3>Spatial sampling</h3>
+  <p>An image is stored at a finite set of discrete locations because memory is finite — you record one value per grid cell rather than at every infinitesimal point. There's a direct trade-off: for the same sensor chip and exposure time, packing in more sensor elements reduces the field-of-view each individual sensor covers ("per-pixel FOV"). More pixels = finer sampling, but weaker per-pixel signal, and tiny sensors are harder to manufacture.</p>
+
+  <div class="analogy">
+    <span class="tag">Analogy</span>
+    <p>Sampling is like surveying a city's opinion by knocking on doors. If you knock on only every 10th house (undersampling), you might miss a pattern repeating every 7 houses entirely — or worse, misread it as some other, slower-changing pattern. That misreading is exactly what causes Moiré patterns.</p>
+  </div>
+
+  <p><strong>Moiré patterns:</strong> undersampling a scene with fine, repetitive detail (a striped shirt, a chain-link fence) can't distinguish the true fine pattern from certain coarser patterns — a false, swirling interference pattern appears that was never in the scene.</p>
+
+  <div class="analogy">
+    <span class="tag">Temporal analogy</span>
+    <p>Ever seen a spinning helicopter rotor look like it's moving slowly backward on video? That's the temporal version of the same undersampling problem — frame rate too slow to correctly capture true rotation speed.</p>
+  </div>
+
+  <h3>Intensity quantization</h3>
+  <p>After sampling fixes <em>where</em> you measure, quantization limits how many distinct values each measurement can be recorded as — literal rounding of brightness values to a limited set of allowed levels. With <strong>N bits</strong>, you get <strong>2ᴺ</strong> possible intensity levels (8 bits → 256 levels, the classic 0–255 range).</p>
+
+  <div class="analogy">
+    <span class="tag">Analogy</span>
+    <p>Quantization is like converting a continuous 0–100% exam score into a letter grade. Two students scoring 91% and 89% might land in different bins (A vs. B) even though their true performance was nearly identical — the rounding error inherent to quantization, entirely separate from how many students you tested (that's the sampling question).</p>
+  </div>
+
+  <div class="brushup">
+    <div class="brushup-head"><span class="dot"></span>Brush-up — sampling &amp; quantization</div>
+    <details class="qcard">
+      <summary>A photo shows a swirling pattern that wasn't in the original scene. Is this a sampling or quantization problem?</summary>
+      <div class="answer"><p>Sampling — this is a Moiré pattern, caused by undersampling a scene with fine repetitive detail relative to the sensor's spatial sampling rate.</p></div>
+    </details>
+    <details class="qcard">
+      <summary>An image looks fine in detail but shows visible "banding" in a smooth sky gradient. Sampling or quantization?</summary>
+      <div class="answer"><p>Quantization — too few intensity levels (too few bits) means smooth gradients get rounded into visibly distinct steps/bands.</p></div>
+    </details>
+    <details class="qcard">
+      <summary>If you double the number of sensor elements on the same chip, what's the immediate trade-off?</summary>
+      <div class="answer"><p>Each sensor element covers a smaller per-pixel field of view, gathering less light and producing a weaker signal per pixel — a direct trade-off between sampling rate and signal strength.</p></div>
+    </details>
+  </div>
+</section>
+
+<!-- ============ 6. COLOR SPACES ============ -->
+<section id="color">
+  <div class="eyebrow"><span class="num">6</span>Color engineering</div>
+  <h2>Color spaces</h2>
+
+  <h3>Additive (RGB) vs. subtractive (CMY)</h3>
+  <table>
+    <tr><th></th><th>RGB (additive)</th><th>CMY (subtractive)</th></tr>
+    <tr><td>Starts from</td><td>Black (no light)</td><td>White (paper reflecting all light)</td></tr>
+    <tr><td>Mechanism</td><td>Add colored light</td><td>Subtract (absorb) with ink</td></tr>
+    <tr><td>Used for</td><td>Screens, TVs, cameras</td><td>Printing</td></tr>
+  </table>
+
+  <p><strong>RGB</strong> starts from total darkness and builds a color by adding red, green, and blue light. Colors on the outer surface of the RGB cube (where at least one channel is at max) are called <strong>saturated colors</strong>.</p>
+  <p><strong>CMY</strong> works by <em>absorbing</em> light reflecting off a page:</p>
+  <div class="math">Cyan   absorbs red    →  C = B + G
+Magenta absorbs green  →  M = R + B
+Yellow  absorbs blue   →  Y = R + G</div>
+  <div class="math">C = 1 - R
+M = 1 - G
+Y = 1 - B</div>
+  <p>White = <code>C=M=Y=0</code> (no ink). Black = <code>C=M=Y=1</code> — in practice not perfectly black on real printers, hence the extra black-ink cartridge (K).</p>
+
+  <div class="analogy">
+    <span class="tag">Analogy</span>
+    <p>RGB is like mixing colored spotlights on a dark stage — shine red, green, and blue together and you get white. CMY is like painting with colored filters over white paper in daylight — every filter can only block more light, never add any.</p>
+  </div>
+
+  <h3>Luminance — why the weights are unequal</h3>
+  <p>The naive gray value <code>A = (R+G+B)/3</code> is perceptually wrong — humans don't perceive R, G, B as equally bright. We're most sensitive to green, then red, then blue. So we use a weighted sum instead:</p>
+  <div class="math">Analog TV (Rec. 601):
+  Y = 0.2990·R + 0.5870·G + 0.1140·B
+
+Digital devices (Rec. 709):
+  Y = 0.2125·R + 0.7154·G + 0.0721·B</div>
+
+  <div class="analogy">
+    <span class="tag">Analogy</span>
+    <p>Like a teacher weighting a final grade 20/30/50 across homework, midterm, final instead of a flat average — because the final exam is a better indicator of understanding. Here green is the "final exam" of color perception.</p>
+  </div>
+
+  <h3>Desaturation</h3>
+  <div class="math">[Rd, Gd, Bd] = s·[R,G,B] + (1-s)·[A,A,A]     where A = (R+G+B)/3</div>
+  <p>A convex combination of the original color and its gray equivalent. <code>s</code> between 0–1 → desaturation; <code>s &gt; 1</code> → increased saturation (clamped to valid range).</p>
+
+  <h3>HSV &amp; HSL — thinking like a painter</h3>
+  <p>RGB is great for hardware but terrible for human intuition. Painters think in <strong>Hue</strong> (which color), <strong>Saturation</strong> (how vivid), <strong>Value/Lightness</strong> (how bright/dark).</p>
+  <ul>
+    <li><strong>HSV</strong> maps to a <strong>cylinder</strong> (or cone): central axis = grays, white at top, black at bottom. Pure saturated colors sit on the top rim, getting darker moving down the surface.</li>
+    <li><strong>HSL</strong> maps to a <strong>double cone</strong>: white at the top point, black at the bottom point, maximally saturated colors bulging around the middle.</li>
+  </ul>
+
+  <div class="idea">
+    <span class="tag">Painter's terminology</span>
+    <p><strong>Tint</strong> = color + white (moving toward light — pastels). <strong>Shade</strong> = color + black (moving toward dark — deep, moody colors). <strong>Tone</strong> = color + gray (moving toward the neutral axis — muted, dusty colors).</p>
+  </div>
+
+  <h3>YUV / YCbCr — engineering color for compression</h3>
+  <p>These color spaces exist to <strong>separate luminance (Y) from two chroma components</strong>, because:</p>
+  <ol>
+    <li>Human vision is far more sensitive to detail in lightness than in color.</li>
+    <li>It preserves compatibility with legacy black-and-white systems.</li>
+    <li>It lets engineers allocate bandwidth/storage asymmetrically — more bits to Y, fewer to chroma.</li>
+  </ol>
+
+  <div class="math">YUV (analog TV, NTSC/PAL):
+  Y = luminance
+  U = scaled (B - Y)
+  V = scaled (R - Y)
+
+YCbCr (digital TV, JPEG):
+  wR = 0.299, wG = 0.587, wB = 0.114
+  Cb ≈ scaled (B - Y)
+  Cr ≈ scaled (R - Y)</div>
+
+  <p><strong>Y vs. Y′ (luma):</strong> Y (luminance) is technically from linear RGB. In practice, systems apply gamma correction to RGB first (<code>R′G′B′</code>), and the resulting quantity is properly called <strong>luma (Y′)</strong>, a nonlinear function of Y — a distinction textbooks are often loose about.</p>
+
+  <h3>Chroma subsampling</h3>
+  <p>Since chroma detail matters less to our eyes, engineers throw away chroma resolution to save bandwidth. Notation <code>4:X:Y</code> = CbCr samples per 4 luma samples across two rows:</p>
+  <ul>
+    <li><strong>4:4:4</strong> — full chroma resolution</li>
+    <li><strong>4:2:2</strong> — half horizontal chroma resolution</li>
+    <li><strong>4:2:0</strong> — half horizontal <em>and</em> vertical chroma resolution</li>
+  </ul>
+
+  <div class="analogy">
+    <span class="tag">Analogy</span>
+    <p>Describing a crowd photo over a slow phone line: you'd read out every person's exact silhouette/brightness (Y — full resolution, since sharp edges matter most for recognition) but only mention the general color zone every couple of people, since losing a little color precision is barely noticeable. That's the trade TV broadcast and JPEG make with 4:2:2 / 4:2:0.</p>
+  </div>
+
+  <div class="brushup">
+    <div class="brushup-head"><span class="dot"></span>Brush-up — color spaces</div>
+    <details class="qcard">
+      <summary>Why does cyan ink absorb red light specifically, rather than some other color?</summary>
+      <div class="answer"><p>Cyan is defined as the RGB combination of blue and green light (B + G) with no red. So cyan pigment is engineered to absorb exactly the red component of incoming white light, reflecting the blue and green back.</p></div>
+    </details>
+    <details class="qcard">
+      <summary>If you wanted to compress an image and could only keep full resolution in one "channel," which would you keep — luminance or chroma — and why?</summary>
+      <div class="answer"><p>Luminance (Y). Human vision is far more sensitive to detail in brightness than in color, so keeping Y at full resolution and subsampling the chroma channels (as in 4:2:2 or 4:2:0) loses little perceptible quality while saving significant bandwidth/storage.</p></div>
+    </details>
+    <details class="qcard">
+      <summary>What's the geometric difference between how HSV and HSL represent "pure, fully saturated" colors?</summary>
+      <div class="answer"><p>In HSV (cylinder/cone), pure saturated colors sit on the top outer rim, at maximum Value. In HSL (double cone), pure saturated colors bulge out around the middle, at Lightness = 0.5 — with both white and black as separate points at the top and bottom.</p></div>
+    </details>
+  </div>
+</section>
+
+<!-- ============ PIPELINE RECAP ============ -->
+<section id="recap">
+  <div class="eyebrow">Recap</div>
+  <h2>The full acquisition pipeline</h2>
+  <div class="pipeline">
+    <div class="pstep"><div class="pnum">01</div><div class="ptext"><strong>Image formation</strong><span>Pinhole/lens geometry — perspective projection (y1, y2) = f·(x1, x2)/x3</span></div></div>
+    <div class="pstep"><div class="pnum">02</div><div class="ptext"><strong>Image sensing</strong><span>CCD/CMOS + Bayer filter — photons → charge → voltage, per-channel color separation</span></div></div>
+    <div class="pstep"><div class="pnum">03</div><div class="ptext"><strong>Sampling</strong><span>Finite grid of pixel locations — risk: Moiré patterns if undersampled</span></div></div>
+    <div class="pstep"><div class="pnum">04</div><div class="ptext"><strong>Quantization</strong><span>Finite bits per intensity value — risk: banding if too coarse</span></div></div>
+    <div class="pstep"><div class="pnum">05</div><div class="ptext"><strong>Color space engineering</strong><span>RGB/CMY, HSV/HSL, YUV/YCbCr + chroma subsampling</span></div></div>
+  </div>
+  <p>Every stage has its own trade-off — brightness vs. sharpness, sensor count vs. per-pixel signal, sampling rate vs. memory, bit-depth vs. storage, perceptual detail vs. bandwidth. That's the throughline of the whole lecture: acquisition is one long chain of <em class="callout">how much are we willing to lose, and where, to save resources?</em></p>
+</section>
+
+<!-- ============ PRACTICE ============ -->
+<section id="practice">
+  <div class="eyebrow"><span class="num">7</span>Test yourself</div>
+  <h2>Practice problem set</h2>
+  <p>Try to solve each problem before checking the solutions below.</p>
+
+  <div class="problem">
+    <div class="problem-head"><span class="level easy">Easy · Conceptual</span><h3>1. Pinhole aperture size</h3></div>
+    <p>Suppose you have a basic pinhole camera. If you <strong>increase the size of the pinhole aperture</strong>, what happens to:</p>
+    <ul>
+      <li>(a) the <strong>brightness</strong> of the resulting image, and</li>
+      <li>(b) the <strong>sharpness</strong> of the resulting image?</li>
+    </ul>
+    <p>Explain why, in terms of what's physically happening to the light rays passing through the hole.</p>
+  </div>
+
+  <div class="problem">
+    <div class="problem-head"><span class="level medium">Medium · Applied math</span><h3>2. Perspective projection</h3></div>
+    <p>A pinhole camera has its pinhole at the origin, with a virtual image plane at focal length <strong>f = 5 cm</strong> in front of it.</p>
+    <p>A point in the 3D scene is located at:</p>
+    <div class="math">(x1, x2, x3) = (12 cm, 6 cm, 24 cm)</div>
+    <p>Using the standard perspective projection equations for the virtual image plane:</p>
+    <div class="math">y1 = f · x1 / x3
+y2 = f · x2 / x3</div>
+    <p>Calculate the exact 2D projection coordinates <code>(y1, y2)</code> of this point on the image plane.</p>
+  </div>
+
+  <div class="problem">
+    <div class="problem-head"><span class="level hard">Hard · Color engineering</span><h3>3. Luminance and CMY conversion</h3></div>
+    <p>You are given a normalized RGB pixel value (each channel scaled to 0–1):</p>
+    <div class="math">R = 0.80,   G = 0.40,   B = 0.20</div>
+    <p><strong>(a)</strong> Calculate the <strong>Luminance (Y)</strong> using standard analog TV (Rec. 601) weights:</p>
+    <div class="math">Y = 0.2990·R + 0.5870·G + 0.1140·B</div>
+    <p><strong>(b)</strong> Using the subtractive color model, calculate the corresponding <strong>pure CMY</strong> print values:</p>
+    <div class="math">C     = 1 - R
+M     = 1 - G
+Y_ink = 1 - B</div>
+    <p>(Using <code>Y_ink</code> for the yellow ink channel to avoid confusion with luminance Y.)</p>
+  </div>
+</section>
+
+<!-- ============ SOLUTIONS ============ -->
+<section id="solutions">
+  <div class="eyebrow"><span class="num">8</span>Answer key</div>
+  <h2>Worked solutions</h2>
+
+  <div class="solutions-gate">
+    <span class="lock">◐</span>
+    <p>ATTEMPT ALL THREE PROBLEMS BEFORE EXPANDING ANY SOLUTION BELOW</p>
+  </div>
+
+  <details class="solution">
+    <summary>Solution 1 — Pinhole aperture size <span class="reveal">reveal</span></summary>
+    <div class="sol-body">
+      <p><strong>(a) Brightness:</strong> Increasing the pinhole size <strong>increases brightness</strong>. A bigger hole lets more total light rays pass through per unit time onto any given point of the sensor, so more photons accumulate → higher signal → brighter image.</p>
+      <p><strong>(b) Sharpness:</strong> Increasing the pinhole size <strong>decreases sharpness</strong>. With a tiny/ideal pinhole, essentially only one ray from each scene point reaches any given point on the image plane — a clean, sharp mapping. As the hole grows, many slightly different rays from the <em>same</em> scene point pass through different parts of the opening and land on slightly different points on the image plane. These overlapping contributions blur what should have been one crisp point into a small blob.</p>
+      <p><strong>Takeaway:</strong> pinhole geometry cannot deliver both maximum brightness and maximum sharpness — exactly why real cameras use a lens, which gathers light from a wide opening while still focusing rays back down to a sharp point.</p>
+    </div>
+  </details>
+
+  <details class="solution">
+    <summary>Solution 2 — Perspective projection <span class="reveal">reveal</span></summary>
+    <div class="sol-body">
+      <p><strong>Given:</strong></p>
+      <div class="math">f = 5 cm
+(x1, x2, x3) = (12 cm, 6 cm, 24 cm)</div>
+      <p><strong>Step 1 — y1:</strong></p>
+      <div class="math">y1 = f · x1 / x3 = 5 · 12 / 24 = 60 / 24 = 2.5 cm</div>
+      <p><strong>Step 2 — y2:</strong></p>
+      <div class="math">y2 = f · x2 / x3 = 5 · 6 / 24 = 30 / 24 = 1.25 cm</div>
+      <p><strong>Final answer:</strong></p>
+      <div class="math">(y1, y2) = (2.5 cm, 1.25 cm)</div>
+      <p><strong>Sanity check:</strong> the scene point has x1 twice as large as x2 (12 vs 6), and the projection preserves that ratio (2.5 vs 1.25) — as expected, since perspective projection uniformly scales both in-plane coordinates by the same factor f/x3.</p>
+    </div>
+  </details>
+
+  <details class="solution">
+    <summary>Solution 3 — Luminance &amp; CMY <span class="reveal">reveal</span></summary>
+    <div class="sol-body">
+      <p><strong>Given:</strong> R = 0.80, G = 0.40, B = 0.20</p>
+      <p><strong>Part (a) — Luminance:</strong></p>
+      <div class="math">Y = 0.2990·0.80 + 0.5870·0.40 + 0.1140·0.20
+  = 0.2392    + 0.2348    + 0.0228
+  = 0.4968</div>
+      <p><strong>Y ≈ 0.497</strong> — roughly mid-gray, since R and G are moderately-to-fairly bright while B is dim, and green's dominant weight (0.587) pulls the result up despite G being smaller than R.</p>
+      <p><strong>Part (b) — CMY conversion:</strong></p>
+      <div class="math">C     = 1 - 0.80 = 0.20
+M     = 1 - 0.40 = 0.60
+Y_ink = 1 - 0.20 = 0.80</div>
+      <p><strong>Final answer:</strong> Y (luminance) ≈ 0.497, (C, M, Y_ink) = (0.20, 0.60, 0.80)</p>
+      <p><strong>Interpretation:</strong> the original color is a strong orange (high R, medium G, low B — think terracotta). Very little cyan is needed (C = 0.20, since R is high), but a lot of yellow ink is needed (Y_ink = 0.80, since B is low) — exactly what you'd expect for printing orange: mostly yellow, moderate magenta, little cyan.</p>
+    </div>
+  </details>
+</section>
+
+</div>
+
+<footer>CS-663 · Digital Image Processing — Week 2 Masterclass · Built for exam-ready recall</footer>
+
+</body>
+</html>
