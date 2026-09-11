@@ -1,5 +1,6 @@
 import numpy as np
 from scipy.ndimage import convolve
+from scipy.ndimage import maximum_filter, minimum_filter
 
 def apply_gaussian_smoothing(image: np.ndarray, sigma: float = 1.0) -> np.ndarray:
     """
@@ -103,3 +104,45 @@ def detect_corners_and_edges(image: np.ndarray, pre_smoothing_sigma: float = 1.0
     shi_tomasi, harris = calculate_corner_scores(lambda_1, lambda_2, Sxx, Syy, Sxy, k)
     
     return lambda_1, lambda_2, shi_tomasi, harris
+
+
+def extract_features_nms(score_map: np.ndarray, threshold: float, mode: str = 'corner', window_size: int = 5) -> tuple[np.ndarray, np.ndarray]:
+    """
+    Applies Non-Maximum Suppression (NMS) using a local window and a threshold 
+    to extract discrete feature coordinates.
+    """
+    if mode == 'corner':
+        # local maxima in the neighborhood
+        local_extreme = maximum_filter(score_map, size=window_size)
+        # Keep pixels that are both the local maximum AND strictly greater than the threshold
+        mask = (score_map == local_extreme) & (score_map > threshold)
+        
+    elif mode == 'edge':
+        # For Harris edges, we look for extreme negative values (local minima)
+        local_extreme = minimum_filter(score_map, size=window_size)
+        # Keep pixels that are the local minimum AND strictly less than -threshold
+        mask = (score_map == local_extreme) & (score_map < -threshold)
+        
+    else:
+        raise ValueError("Mode must be 'corner' or 'edge'.")
+        
+    # Return the discrete (y, x) coordinates of the features
+    y, x = np.where(mask)
+    return y, x
+
+def extract_all_features(shi_tomasi: np.ndarray, harris: np.ndarray, 
+                         t_st: float, t_harris_c: float, t_harris_e: float, 
+                         nms_window: int = 5):
+    """
+    Runs the thresholding and NMS extraction for all three feature categories.
+    """
+    # 1. Shi-Tomasi Corners
+    st_corners_y, st_corners_x = extract_features_nms(shi_tomasi, t_st, mode='corner', window_size=nms_window)
+    
+    # 2. Harris Corners
+    h_corners_y, h_corners_x = extract_features_nms(harris, t_harris_c, mode='corner', window_size=nms_window)
+    
+    # 3. Harris Edges (Note the 'edge' mode handles the negative thresholding internally)
+    h_edges_y, h_edges_x = extract_features_nms(harris, t_harris_e, mode='edge', window_size=nms_window)
+    
+    return (st_corners_y, st_corners_x), (h_corners_y, h_corners_x), (h_edges_y, h_edges_x)
