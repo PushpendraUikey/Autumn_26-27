@@ -31,6 +31,16 @@ def compute_image_gradients(image: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     
     return Ix, Iy
 
+def compute_tensor_components(Ix: np.ndarray, Iy: np.ndarray) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """
+    Computes the raw per-pixel components of the Structure Tensor.
+    """
+    Ixx = Ix ** 2
+    Iyy = Iy ** 2
+    Ixy = Ix * Iy
+    
+    return Ixx, Iyy, Ixy
+
 def detect_corners_and_edges(image: np.ndarray, pre_smoothing_sigma: float = 1.0):
     if image.ndim > 2:
         raise ValueError("Feature detection requires a 2D grayscale image.")
@@ -41,4 +51,7 @@ def detect_corners_and_edges(image: np.ndarray, pre_smoothing_sigma: float = 1.0
     # --- Stage 2: Gradients ---
     Ix, Iy = compute_image_gradients(smoothed_image)
     
-    return Ix, Iy
+    # --- Stage 3: Structure Tensor Components ---
+    Ixx, Iyy, Ixy = compute_tensor_components(Ix, Iy)
+    
+    return Ixx, Iyy, Ixy
