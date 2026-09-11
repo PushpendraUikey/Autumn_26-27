@@ -14,14 +14,31 @@ def apply_gaussian_smoothing(image: np.ndarray, sigma: float = 1.0) -> np.ndarra
     
     return convolve(image, kernel, mode='reflect')
 
+def compute_image_gradients(image: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    """
+    Computes horizontal (Ix) and vertical (Iy) intensity gradients using Sobel operators.
+    """
+    sobel_x = np.array([[-1,  0,  1],
+                        [-2,  0,  2],
+                        [-1,  0,  1]], dtype=np.float64)
+    
+    sobel_y = np.array([[-1, -2, -1],
+                        [ 0,  0,  0],
+                        [ 1,  2,  1]], dtype=np.float64)
+    
+    Ix = convolve(image, sobel_x, mode='reflect')
+    Iy = convolve(image, sobel_y, mode='reflect')
+    
+    return Ix, Iy
+
 def detect_corners_and_edges(image: np.ndarray, pre_smoothing_sigma: float = 1.0):
-    """
-    Stage 1: Preprocessing for Structure Tensor feature detection.
-    """
     if image.ndim > 2:
         raise ValueError("Feature detection requires a 2D grayscale image.")
         
-    # Apply light Gaussian blur to mitigate rapid intensity spikes
+    # --- Stage 1: Preprocessing ---
     smoothed_image = apply_gaussian_smoothing(image, sigma=pre_smoothing_sigma)
     
-    return smoothed_image
+    # --- Stage 2: Gradients ---
+    Ix, Iy = compute_image_gradients(smoothed_image)
+    
+    return Ix, Iy
