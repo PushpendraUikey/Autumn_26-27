@@ -103,7 +103,7 @@ def double_threshold_and_hysterisis(suppressed: np.ndarray, t_low: float, t_high
 
     stack = list(zip(strong_y, strong_x)) # dfs seeds
 
-    neighbors = [(-1, -1), (-1, 0), (-1, 1)
+    neighbors = [(-1, -1), (-1, 0), (-1, 1),
                  (0, -1),           (0, 1),
                  (1, -1),  (1, 0),  (1, 1)]
     while stack:
@@ -147,7 +147,7 @@ if __name__ == "__main__":
     for img_name, params in canny_params.items():
         print(f"Processing Canny Edge Detection for : {img_name}")
         img_path = os.path.join(base_path, img_name)
-        image = utils.load_image(img_path, is_gray=True)
+        image = utils.load_image(img_path, as_gray=True)
 
         sigma = params["sigma"]
         t_low = params["t_low"]
