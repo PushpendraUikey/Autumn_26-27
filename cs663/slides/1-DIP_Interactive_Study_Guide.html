@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>CS-663: Digital Image Processing — Interactive Study Guide</title>
+<style>
+  :root{
+    --bg:#0f1420; --panel:#161d2e; --panel2:#1c2436; --border:#2a3450;
+    --text:#e6ebf5; --muted:#9aa7c2; --accent:#5fb3ff; --accent2:#7cf0c2;
+    --easy:#5fd68c; --medium:#f5c451; --hard:#f56a6a;
+    --code:#0c1220;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; font-family:'Segoe UI',Roboto,-apple-system,Arial,sans-serif;
+    background:linear-gradient(180deg,#0b0f18,#0f1420 400px); color:var(--text);
+    line-height:1.55;
+  }
+  .wrap{max-width:1100px;margin:0 auto;padding:28px 22px 100px;}
+  header.top{
+    padding:34px 30px; border-radius:16px;
+    background:radial-gradient(circle at 20% 20%,#1b2440,#0f1420 70%);
+    border:1px solid var(--border); margin-bottom:26px;
+  }
+  header.top h1{margin:0 0 6px; font-size:1.9rem; color:var(--accent);}
+  header.top p{margin:0; color:var(--muted); font-size:.98rem;}
+  nav.toc{
+    display:flex; flex-wrap:wrap; gap:8px; margin:22px 0 34px;
+    position:sticky; top:0; background:rgba(15,20,32,.92); backdrop-filter:blur(6px);
+    padding:12px 0; z-index:10; border-bottom:1px solid var(--border);
+  }
+  nav.toc a{
+    color:var(--muted); text-decoration:none; font-size:.82rem; padding:6px 12px;
+    border:1px solid var(--border); border-radius:20px; background:var(--panel);
+    transition:.15s;
+  }
+  nav.toc a:hover{color:var(--accent); border-color:var(--accent);}
+  section{margin-bottom:46px;}
+  h2.section-title{
+    font-size:1.4rem; color:var(--accent2); border-bottom:2px solid var(--border);
+    padding-bottom:8px; margin-bottom:18px; display:flex; align-items:center; gap:10px;
+  }
+  h2.section-title .num{
+    background:var(--accent); color:#06111f; font-weight:700; border-radius:8px;
+    width:30px; height:30px; display:flex; align-items:center; justify-content:center;
+    font-size:.9rem; flex:none;
+  }
+  .card{
+    background:var(--panel); border:1px solid var(--border); border-radius:14px;
+    padding:20px 22px; margin-bottom:16px;
+  }
+  .card h3{margin-top:0; color:var(--accent); font-size:1.08rem;}
+  .card h4{color:var(--text); font-size:.98rem; margin-bottom:6px;}
+  .analogy{
+    border-left:3px solid var(--accent2); background:var(--panel2); padding:12px 16px;
+    border-radius:0 10px 10px 0; margin:14px 0; font-size:.95rem;
+  }
+  .analogy b{color:var(--accent2);}
+  pre{
+    background:var(--code); border:1px solid var(--border); border-radius:10px;
+    padding:14px 16px; overflow-x:auto; font-size:.85rem; line-height:1.5;
+  }
+  code{font-family:'Cascadia Code',Consolas,'Courier New',monospace; color:#d7e3ff;}
+  pre code{color:#cfe6ff;}
+  .keyword{color:#c792ea;} .comment{color:#6a7897;}
+  table{width:100%; border-collapse:collapse; margin:12px 0; font-size:.9rem;}
+  th,td{border:1px solid var(--border); padding:8px 10px; text-align:left;}
+  th{background:var(--panel2); color:var(--accent);}
+  ul,ol{padding-left:22px;}
+  .formula{
+    background:var(--panel2); border:1px solid var(--border); border-radius:8px;
+    padding:10px 14px; margin:10px 0; font-family:Consolas,monospace; font-size:.92rem;
+    color:var(--accent2); overflow-x:auto;
+  }
+  /* Question blocks */
+  .qbank{margin-top:18px;}
+  .qtabs{display:flex; gap:8px; margin-bottom:16px;}
+  .qtab{
+    flex:1; text-align:center; padding:10px; border-radius:10px; cursor:pointer;
+    border:1px solid var(--border); font-weight:600; font-size:.9rem; user-select:none;
+    background:var(--panel2); color:var(--muted);
+  }
+  .qtab.active-easy{background:var(--easy); color:#06210f; border-color:var(--easy);}
+  .qtab.active-medium{background:var(--medium); color:#241900; border-color:var(--medium);}
+  .qtab.active-hard{background:var(--hard); color:#2a0606; border-color:var(--hard);}
+  .qgroup{display:none;}
+  .qgroup.show{display:block;}
+  .question{
+    background:var(--panel2); border:1px solid var(--border); border-radius:10px;
+    padding:14px 16px; margin-bottom:12px;
+  }
+  .question .qlabel{
+    display:inline-block; font-size:.72rem; font-weight:700; letter-spacing:.04em;
+    padding:2px 8px; border-radius:6px; margin-bottom:8px;
+  }
+  .qlabel.easy{background:var(--easy); color:#06210f;}
+  .qlabel.medium{background:var(--medium); color:#241900;}
+  .qlabel.hard{background:var(--hard); color:#2a0606;}
+  details{margin-top:8px;}
+  summary{
+    cursor:pointer; color:var(--accent); font-weight:600; font-size:.88rem;
+    padding:6px 0; outline:none;
+  }
+  summary:hover{color:var(--accent2);}
+  details[open] summary{margin-bottom:8px;}
+  .answer{
+    background:#0c1626; border:1px solid #24365c; border-radius:8px; padding:12px 14px;
+    font-size:.9rem;
+  }
+  .progress-badge{
+    position:fixed; bottom:18px; right:18px; background:var(--panel); border:1px solid var(--border);
+    border-radius:12px; padding:10px 16px; font-size:.82rem; color:var(--muted); box-shadow:0 6px 20px rgba(0,0,0,.4);
+  }
+  .footer-note{color:var(--muted); font-size:.85rem; text-align:center; margin-top:40px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="top">
+  <h1>CS-663 · Fundamentals of Digital Image Processing</h1>
+  <p>Interactive study guide — algorithmic mechanics, C++-oriented pseudocode, and difficulty-tiered practice questions. Pure technical content only (no logistics).</p>
+</header>
+
+<nav class="toc">
+  <a href="#acq">1. Acquisition</a>
+  <a href="#basic">2. Basic Ops</a>
+  <a href="#point">3. Point Ops / Histograms</a>
+  <a href="#spatial">4. Spatial Filtering</a>
+  <a href="#edges">5. Edges & Corners</a>
+  <a href="#seg">6. Segmentation</a>
+  <a href="#denoise">7. Denoising</a>
+  <a href="#fourier">8. Fourier Analysis</a>
+  <a href="#pca">9. PCA</a>
+  <a href="#dnn">10. Deep Neural Networks</a>
+</nav>
+
+<!-- ============ 1. ACQUISITION ============ -->
+<section id="acq">
+<h2 class="section-title"><span class="num">1</span>Image Acquisition & the Digital Image Model</h2>
+<div class="card">
+<h3>Core idea</h3>
+<p>A digital image is a discretized sample of a continuous physical signal. Two independent discretizations happen:</p>
+<ul>
+<li><b>Spatial sampling</b>: continuous coordinates (x, y) → integer grid indices (pixel/voxel locations), governed by the sensor's sampling rate (e.g., CCD/CMOS array pitch).</li>
+<li><b>Amplitude quantization</b>: continuous intensity → a finite set of discrete levels (e.g., 8-bit → 256 levels per channel).</li>
+</ul>
+<p>An image is formally a function <code>f: D → R</code> where the domain <code>D</code> (grid coordinates) and range <code>R</code> (intensity/color values) can each be discrete or continuous, scalar or vector. A grayscale photo is a 2→1 mapping; an RGB video is a 3→3 mapping (2 spatial + 1 time dimension, 3 color channels).</p>
+<div class="analogy"><b>Landscape analogy:</b> Imagine photographing a rocky coastline at sunset with a CCD camera. The continuous variation of light intensity across the cliff face gets carved into a grid of pixels (spatial sampling), and each pixel's brightness is rounded to one of 256 possible gray levels (quantization) — you lose the "infinite resolution" of the analog scene the moment the sensor's array captures it.</p>
+</div>
+<h4>Representing an image in C++</h4>
+<pre><code><span class="keyword">struct</span> Image {
+    <span class="keyword">int</span> rows, cols, channels;
+    std::vector&lt;<span class="keyword">unsigned char</span>&gt; data;  <span class="comment">// row-major, size = rows*cols*channels</span>
+    <span class="keyword">unsigned char</span>&amp; at(<span class="keyword">int</span> r, <span class="keyword">int</span> c, <span class="keyword">int</span> ch = 0) {
+        <span class="keyword">return</span> data[(r * cols + c) * channels + ch];
+    }
+};</code></pre>
+</div>
+
+<div class="qbank">
+<div class="qtabs">
+  <div class="qtab active-easy" onclick="showQ('acq','easy')">Easy</div>
+  <div class="qtab" onclick="showQ('acq','medium')">Medium</div>
+  <div class="qtab" onclick="showQ('acq','hard')">Hard</div>
+</div>
+
+<div class="qgroup show" id="acq-easy">
+<div class="question"><span class="qlabel easy">EASY</span>
+<p>A grayscale image of a stone lighthouse is stored as 512×512 pixels with 8 bits per pixel. How many bytes does the raw array occupy?</p>
+<details><summary>Reveal answer</summary><div class="answer">512 × 512 × 1 byte = 262,144 bytes (256 KB). Each pixel needs exactly 1 byte since 8 bits give 256 gray levels.</div></details>
+</div>
+<div class="question"><span class="qlabel easy">EASY</span>
+<p>Classify the domain→range mapping type for: (a) a stock index over time, (b) a color photo of a cliffside.</p>
+<details><summary>Reveal answer</summary><div class="answer">(a) 1→1 (1D time domain, scalar range). (b) 2→3 (2D spatial domain, RGB vector range).</div></details>
+</div>
+</div>
+
+<div class="qgroup" id="acq-medium">
+<div class="question"><span class="qlabel medium">MEDIUM</span>
+<p>Why is amplitude quantization a lossy, irreversible step even if spatial sampling were perfect (infinite resolution)?</p>
+<details><summary>Reveal answer</summary><div class="answer">Quantization maps a continuous range of real-valued intensities to a finite set of discrete levels — many distinct analog intensities collapse onto the same output level (many-to-one mapping), so the original continuous value cannot be recovered exactly. This is analogous to lossy compression: information is destroyed, not just re-encoded.</div></details>
+</div>
+<div class="question"><span class="qlabel medium">MEDIUM</span>
+<p>You capture a panoramic photo of a coastline in RGB at 8 bits/channel, resolution 4000×1200. Compute the storage in MB, and explain why storing it as three separate 2D arrays vs. one interleaved 3D array changes only memory layout, not information content.</p>
+<details><summary>Reveal answer</summary><div class="answer">4000 × 1200 × 3 = 14,400,000 bytes ≈ 13.7 MB. Planar (three 2D arrays, R-plane then G-plane then B-plane) vs. interleaved (RGBRGBRGB... per pixel) store the same (row, col, channel) → intensity function; only the memory access pattern/cache locality differs, e.g., interleaved is often faster for per-pixel operations, planar is faster for per-channel operations like separate histogram equalization.</div></details>
+</div>
+</div>
+
+<div class="qgroup" id="acq-hard">
+<div class="question"><span class="qlabel hard">HARD</span>
+<p>Given a CCD sensor with pixel pitch (center-to-center spacing) of 5 μm and an optical system that projects the scene at a given magnification, argue — without invoking the Fourier module yet — why spatial sampling can introduce visual artifacts (moiré/aliasing) when photographing a repetitive stone-brick wall pattern at a coastline fort.</p>
+<details><summary>Reveal answer</summary><div class="answer">If the brick pattern's repetition period, once projected onto the sensor plane, is comparable to or finer than the sensor's sampling pitch, the discrete grid cannot faithfully represent the pattern's spatial frequency. High-frequency detail gets "folded" into lower, spurious frequencies in the sampled image — this is aliasing, and for regular patterns it manifests as moiré fringes. (Formal treatment: this is exactly what the Nyquist sampling criterion in the Fourier Analysis section explains.)</div></details>
+</div>
+</div>
+</div>
+</section>
+
+<!-- ============ 2. BASIC OPERATIONS ============ -->
+<section id="basic">
+<h2 class="section-title"><span class="num">2</span>Basic Operations: Resizing & Interpolation</h2>
+<div class="card">
+<h3>Core idea</h3>
+<p>Resizing changes the sampling grid. Downsampling reduces the number of samples (risking aliasing unless pre-filtered); upsampling increases the number of samples, requiring us to <i>invent</i> intensity values at new grid positions that didn't exist before — this is interpolation.</p>
+<h4>Common interpolation kernels</h4>
+<table>
+<tr><th>Method</th><th>Mechanics</th><th>Complexity / Quality tradeoff</th></tr>
+<tr><td>Nearest-neighbor</td><td>Copy value of closest source pixel</td><td>O(1) per pixel, blocky artifacts</td></tr>
+<tr><td>Bilinear</td><td>Weighted average of 4 nearest neighbors, linear in each axis</td><td>Smooth but blurs edges slightly</td></tr>
+<tr><td>Bicubic</td><td>Weighted sum of 16 neighbors using cubic polynomial weights</td><td>Sharper, more expensive, can overshoot (ringing)</td></tr>
+</table>
+<h4>Bilinear interpolation — the algorithmic core</h4>
+<p>For a target coordinate <code>(x, y)</code> mapped back into source space, let <code>x0=floor(x), y0=floor(y)</code>, and fractional parts <code>a = x-x0, b = y-y0</code>. Then:</p>
+<div class="formula">f(x,y) ≈ (1-a)(1-b)·f(x0,y0) + a(1-b)·f(x0+1,y0) + (1-a)b·f(x0,y0+1) + ab·f(x0+1,y0+1)</div>
+<pre><code><span class="keyword">float</span> bilinear(<span class="keyword">const</span> Image&amp; src, <span class="keyword">float</span> x, <span class="keyword">float</span> y) {
+    <span class="keyword">int</span> x0 = (<span class="keyword">int</span>)std::floor(x), y0 = (<span class="keyword">int</span>)std::floor(y);
+    <span class="keyword">int</span> x1 = std::min(x0 + 1, src.cols - 1);
+    <span class="keyword">int</span> y1 = std::min(y0 + 1, src.rows - 1);
+    <span class="keyword">float</span> a = x - x0, b = y - y0;
+    <span class="keyword">float</span> top    = (1-a) * src.at(y0,x0) + a * src.at(y0,x1);
+    <span class="keyword">float</span> bottom = (1-a) * src.at(y1,x0) + a * src.at(y1,x1);
+    <span class="keyword">return</span> (1-b) * top + b * bottom;
+}</code></pre>
+<div class="analogy"><b>Landscape analogy:</b> Imagine zooming into a photograph of a mountain ridge until individual pixels are visible as jagged blocks — that's nearest-neighbor. Bilinear interpolation instead "blends the fog" between adjacent sample points, producing a smoother (but softer) ridge outline, as if you gently diffused the boundary between rock and sky.</div>
+</div>
+
+<div class="qbank">
+<div class="qtabs">
+  <div class="qtab active-easy" onclick="showQ('basic','easy')">Easy</div>
+  <div class="qtab" onclick="showQ('basic','medium')">Medium</div>
+  <div class="qtab" onclick="showQ('basic','hard')">Hard</div>
+</div>
+<div class="qgroup show" id="basic-easy">
+<div class="question"><span class="qlabel easy">EASY</span>
+<p>Why does nearest-neighbor interpolation produce "blocky" enlarged images?</p>
+<details><summary>Reveal answer</summary><div class="answer">It simply replicates the nearest source pixel's value for every new target pixel without blending — so a single original pixel expands into a solid block of identical intensity, creating visible square artifacts at edges.</div></details>
+</div>
+<div class="question"><span class="qlabel easy">EASY</span>
+<p>Trace bilinear interpolation: source pixels at (0,0)=10, (1,0)=20, (0,1)=30, (1,1)=40 (format (col,row)). Find the interpolated value at (0.5, 0.5).</p>
+<details><summary>Reveal answer</summary><div class="answer">a=0.5, b=0.5. top = 0.5·10 + 0.5·20 = 15. bottom = 0.5·30 + 0.5·40 = 35. Result = 0.5·15 + 0.5·35 = 25.</div></details>
+</div>
+</div>
+<div class="qgroup" id="basic-medium">
+<div class="question"><span class="qlabel medium">MEDIUM</span>
+<p>You downsample a 1200×800 photo of a rocky coastline to 300×200 by simply picking every 4th pixel (no pre-filtering). What artifact should you expect, and what is the standard fix?</p>
+<details><summary>Reveal answer</summary><div class="answer">Aliasing — fine texture in the rocks (high spatial frequency) will fold into false, lower-frequency patterns (moiré). Fix: apply a low-pass (blurring/anti-aliasing) filter before subsampling to remove frequency content above the new Nyquist limit.</div></details>
+</div>
+<div class="question"><span class="qlabel medium">MEDIUM</span>
+<p>Why is bicubic interpolation described as capable of "ringing" (overshoot) near sharp edges, e.g., the silhouette of a lighthouse against the sky, while bilinear never overshoots?</p>
+<details><summary>Reveal answer</summary><div class="answer">Bicubic weights include negative lobes (the cubic kernel dips below zero away from the center) to sharpen edges, which can push interpolated values beyond the local min/max of the neighborhood — producing halo/ringing artifacts. Bilinear weights are all non-negative and sum to 1, so its output is always a convex combination (weighted average) of the 4 neighbors, bounded within their min and max.</div></details>
+</div>
+</div>
+<div class="qgroup" id="basic-hard">
+<div class="question"><span class="qlabel hard">HARD</span>
+<p>Design (in pseudocode) an image resize function that correctly composes anti-aliasing + resampling for arbitrary downscale factor <code>s &lt; 1</code>, and explain the time complexity relative to naive per-pixel bilinear resizing.</p>
+<details><summary>Reveal answer</summary><div class="answer">
+Pseudocode:
+<pre><code><span class="keyword">Image</span> resize_downscale(Image src, <span class="keyword">float</span> s) {
+    <span class="comment">// 1. Low-pass filter with kernel sized to new Nyquist limit (~ sigma ∝ 1/s)</span>
+    Image blurred = gaussianBlur(src, sigma = 0.5 / s);
+    <span class="comment">// 2. Resample on the coarser grid using bilinear/bicubic on the blurred image</span>
+    <span class="keyword">int</span> newRows = round(src.rows * s), newCols = round(src.cols * s);
+    Image out(newRows, newCols);
+    <span class="keyword">for</span> (r, c <span class="keyword">in</span> out)
+        out(r,c) = bilinear(blurred, c/s, r/s);
+    <span class="keyword">return</span> out;
+}</code></pre>
+Complexity: Gaussian blur with a separable kernel of width k costs O(rows·cols·k) (two 1D passes instead of one 2D pass, since a 2D Gaussian factors into a product of 1D Gaussians). Resampling itself is O(newRows·newCols). Total ≈ O(N·k) for an N-pixel image, vs. naive resize without blur which is O(newN) but produces aliasing — the "correctness" cost is the added O(N·k) blur pass.
+</div></details>
+</div>
+</div>
+</div>
+</section>
+
+<!-- ============ 3. POINT OPERATIONS ============ -->
+<section id="point">
+<h2 class="section-title"><span class="num">3</span>Point Operations & Histogram-Based Processing</h2>
+<div class="card">
+<h3>Core idea</h3>
+<p>A point operation transforms each pixel's intensity independently of its neighbors: <code>g(x,y) = T(f(x,y))</code>. The histogram <code>h(k) = count of pixels with intensity k</code> summarizes the global intensity distribution and drives operations like contrast stretching and equalization.</p>
+<h4>Histogram equalization — the algorithm</h4>
+<ol>
+<li>Compute histogram <code>h(k)</code> for k = 0..L-1.</li>
+<li>Compute normalized cumulative distribution function (CDF): <code>cdf(k) = Σ_{i=0}^{k} h(i) / N</code>, where N = total pixel count.</li>
+<li>Map each intensity via <code>T(k) = round((L-1) · cdf(k))</code>.</li>
+</ol>
+<div class="formula">T(k) = (L-1) · Σ_{i=0}^{k} h(i) / N</div>
+<p>This spreads out the most frequent intensity values, using the CDF's property that mapping through it approximately equalizes the output histogram (exactly, in the continuous case).</p>
+<pre><code>std::vector&lt;<span class="keyword">unsigned char</span>&gt; histogramEqualize(<span class="keyword">const</span> Image&amp; src) {
+    <span class="keyword">int</span> N = src.rows * src.cols;
+    std::vector&lt;<span class="keyword">int</span>&gt; hist(256, 0);
+    <span class="keyword">for</span> (<span class="keyword">unsigned char</span> p : src.data) hist[p]++;
+
+    std::vector&lt;<span class="keyword">unsigned char</span>&gt; lut(256);
+    <span class="keyword">long</span> cum = 0;
+    <span class="keyword">for</span> (<span class="keyword">int</span> k = 0; k &lt; 256; k++) {
+        cum += hist[k];
+        lut[k] = (<span class="keyword">unsigned char</span>) std::round(255.0 * cum / N);
+    }
+    <span class="keyword">return</span> lut;   <span class="comment">// apply: dst[i] = lut[src.data[i]]</span>
+}</code></pre>
+<div class="analogy"><b>Landscape analogy:</b> A hazy photo of a coastline at dawn often has most pixel intensities crammed into a narrow mid-gray band (low contrast, like fog). Histogram equalization "redistributes" that cramped band across the full 0–255 range — dark rocks become darker, bright sky becomes brighter — revealing detail that was hiding in the low-contrast fog.</div>
+</div>
+
+<div class="qbank">
+<div class="qtabs">
+  <div class="qtab active-easy" onclick="showQ('point','easy')">Easy</div>
+  <div class="qtab" onclick="showQ('point','medium')">Medium</div>
+  <div class="qtab" onclick="showQ('point','hard')">Hard</div>
+</div>
+<div class="qgroup show" id="point-easy">
+<div class="question"><span class="qlabel easy">EASY</span>
+<p>Is gamma correction <code>g = 255·(f/255)^γ</code> a point operation? Justify in one line.</p>
+<details><summary>Reveal answer</summary><div class="answer">Yes — the output at (x,y) depends only on the input value at (x,y), not on any neighboring pixels.</div></details>
+</div>
+<div class="question"><span class="qlabel easy">EASY</span>
+<p>A 4×4 image (16 pixels) has intensities: eight pixels at 0, eight pixels at 3, and the intensity range is 0–3 (L=4). What is h(0) and h(3)?</p>
+<details><summary>Reveal answer</summary><div class="answer">h(0) = 8, h(3) = 8 (h(1) = h(2) = 0).</div></details>
+</div>
+</div>
+<div class="qgroup" id="point-medium">
+<div class="question"><span class="qlabel medium">MEDIUM</span>
+<p>Using the 4×4 image above (h(0)=8, h(1)=0, h(2)=0, h(3)=8, N=16, L=4), compute the histogram-equalized mapping T(k) for k=0 and k=3.</p>
+<details><summary>Reveal answer</summary><div class="answer">cdf(0) = 8/16 = 0.5 → T(0) = round(3 × 0.5) = round(1.5) = 2. cdf(3) = 16/16 = 1.0 → T(3) = round(3 × 1.0) = 3. So original 0 → 2, and 3 stays 3: the equalized image now has values {2,3} instead of {0,3} — contrast changed, not necessarily "improved" for this degenerate bimodal case, illustrating that equalization is a statistical, not perceptual, criterion.</div></details>
+</div>
+<div class="question"><span class="qlabel medium">MEDIUM</span>
+<p>Contrast stretching (min-max normalization) and histogram equalization are both point operations addressing "low contrast." What key difference distinguishes them in terms of the transformation function T?</p>
+<details><summary>Reveal answer</summary><div class="answer">Contrast stretching applies a single global linear (affine) function T(k) = (k - min)/(max - min) × (L-1) — the same slope everywhere. Histogram equalization applies a nonlinear, data-dependent function derived from the CDF, so it stretches more where the histogram is dense (redistributing based on frequency) and compresses where it's sparse.</div></details>
+</div>
+</div>
+<div class="qgroup" id="point-hard">
+<div class="question"><span class="qlabel hard">HARD</span>
+<p>Explain, algorithmically, how you would implement <b>adaptive (local) histogram equalization / CLAHE</b> for a photo of a shadowed rocky coastline with both a dark cave interior and a bright sunlit cliff, and why global equalization fails here. Include the role of tile-based processing and bilinear blending between tiles.</p>
+<details><summary>Reveal answer</summary><div class="answer">
+Global equalization computes one histogram/CDF for the whole image; it cannot simultaneously boost contrast in the dark cave region and the bright cliff region because a single monotonic mapping applies everywhere — enhancing shadow detail would clip/saturate the bright region and vice versa.
+
+CLAHE approach: (1) Partition the image into a grid of tiles (e.g., 8×8). (2) Compute a local histogram per tile, clip it at a threshold to limit noise amplification (redistribute clipped counts uniformly), then compute the local CDF-based mapping for that tile. (3) For each pixel, don't apply its own tile's mapping directly — instead, bilinearly interpolate the mapped value using the 4 nearest tile-center mappings, so transitions between tiles are smooth rather than blocky.
+
+Complexity: O(rows·cols) for histogram computation, plus O(rows·cols) for the interpolation pass — still linear in image size, with a constant factor from the number of tiles.
+</div></details>
+</div>
+</div>
+</div>
+</section>
+
+<!-- ============ 4. SPATIAL FILTERING ============ -->
+<section id="spatial">
+<h2 class="section-title"><span class="num">4</span>Spatial Filtering & Convolution</h2>
+<div class="card">
+<h3>Core idea</h3>
+<p>Unlike point operations, spatial filtering computes each output pixel from a <i>neighborhood</i> of input pixels via a weighted sum — the kernel (mask). This is <b>convolution</b> (or correlation, if the kernel isn't flipped).</p>
+<div class="formula">g(x,y) = Σ_i Σ_j f(x-i, y-j) · k(i,j)</div>
+<h4>Key kernels</h4>
+<table>
+<tr><th>Kernel</th><th>Effect</th><th>Mechanics</th></tr>
+<tr><td>Box / mean filter</td><td>Blur, noise reduction</td><td>Uniform averaging over a window</td></tr>
+<tr><td>Gaussian</td><td>Smooth blur, less "ringing" than box</td><td>Weights ∝ exp(-(x²+y²)/2σ²), separable</td></tr>
+<tr><td>Sharpening (unsharp mask)</td><td>Edge enhancement</td><td>original + α·(original − blurred)</td></tr>
+<tr><td>Sobel / Prewitt</td><td>Gradient / edge detection</td><td>Approximates ∂f/∂x, ∂f/∂y via finite differences</td></tr>
+<tr><td>Laplacian</td><td>Second-derivative edge/zero-crossing detection</td><td>Sum of second partial derivatives</td></tr>
+</table>
+<h4>Naive convolution in C++ (O(rows·cols·k²) for a k×k kernel)</h4>
+<pre><code>Image convolve(<span class="keyword">const</span> Image&amp; src, <span class="keyword">const</span> std::vector&lt;std::vector&lt;<span class="keyword">float</span>&gt;&gt;&amp; kernel) {
+    <span class="keyword">int</span> kh = kernel.size(), kw = kernel[0].size();
+    <span class="keyword">int</span> cy = kh/2, cx = kw/2;
+    Image out(src.rows, src.cols);
+    <span class="keyword">for</span> (<span class="keyword">int</span> y = 0; y &lt; src.rows; y++)
+      <span class="keyword">for</span> (<span class="keyword">int</span> x = 0; x &lt; src.cols; x++) {
+        <span class="keyword">float</span> sum = 0.f;
+        <span class="keyword">for</span> (<span class="keyword">int</span> j = 0; j &lt; kh; j++)
+          <span class="keyword">for</span> (<span class="keyword">int</span> i = 0; i &lt; kw; i++) {
+            <span class="keyword">int</span> sy = clamp(y + (j-cy), 0, src.rows-1);  <span class="comment">// border handling</span>
+            <span class="keyword">int</span> sx = clamp(x + (i-cx), 0, src.cols-1);
+            sum += src.at(sy, sx) * kernel[j][i];
+          }
+        out.at(y,x) = clampByte(sum);
+      }
+    <span class="keyword">return</span> out;
+}</code></pre>
+<h4>Separability speedup</h4>
+<p>If a 2D kernel K can be written as an outer product <code>K = v · hᵀ</code> of two 1D vectors (true for Gaussian, box filters), convolution reduces from O(k²) work per pixel to O(2k): first convolve every row with <code>h</code>, then every column of the result with <code>v</code>.</p>
+<div class="analogy"><b>Landscape analogy:</b> Think of a Gaussian blur on a photo of a misty coastline as literally simulating fog diffusion — each pixel "borrows" a weighted average of light from its neighbors, with closer neighbors contributing more, exactly like how mist scatters light locally. A Sobel filter, in contrast, acts like a flashlight sweeping across the rocky silhouette, lighting up only where brightness changes sharply — i.e., the boundary between rock and sky.</div>
+</div>
+
+<div class="qbank">
+<div class="qtabs">
+  <div class="qtab active-easy" onclick="showQ('spatial','easy')">Easy</div>
+  <div class="qtab" onclick="showQ('spatial','medium')">Medium</div>
+  <div class="qtab" onclick="showQ('spatial','hard')">Hard</div>
+</div>
+<div class="qgroup show" id="spatial-easy">
+<div class="question"><span class="qlabel easy">EASY</span>
+<p>What is the difference between convolution and correlation in image filtering?</p>
+<details><summary>Reveal answer</summary><div class="answer">Convolution flips the kernel both horizontally and vertically (180° rotation) before sliding it over the image; correlation slides the kernel as-is without flipping. For symmetric kernels (e.g., Gaussian, box filter) the two are identical; for asymmetric kernels (e.g., Sobel) they differ.</div></details>
+</div>
+<div class="question"><span class="qlabel easy">EASY</span>
+<p>Apply a 3×3 mean filter to the center pixel of this 3×3 neighborhood: [10,10,10 / 10,90,10 / 10,10,10]. What's the output?</p>
+<details><summary>Reveal answer</summary><div class="answer">Sum = 8×10 + 90 = 170. Average = 170/9 ≈ 18.9 → rounds to 19. The bright outlier (90) is heavily smoothed toward the surrounding value.</div></details>
+</div>
+</div>
+<div class="qgroup" id="spatial-medium">
+<div class="question"><span class="qlabel medium">MEDIUM</span>
+<p>Why does a Gaussian filter blur an image with less "ringing" (halo artifacts) than an ideal box filter of the same size, even though both are low-pass filters?</p>
+<details><summary>Reveal answer</summary><div class="answer">In the frequency domain, a box filter's spectrum is a sinc function with significant side-lobes (negative and oscillating), which introduces ringing near sharp edges. A Gaussian's Fourier transform is itself a Gaussian — smooth, positive, and monotonically decaying with no side-lobes — so it attenuates high frequencies gradually without oscillation, avoiding ringing.</div></details>
+</div>
+<div class="question"><span class="qlabel medium">MEDIUM</span>
+<p>You need to detect horizontal edges (e.g., the waterline where sea meets a rocky cliff) using Sobel. Which Sobel kernel orientation (Gx or Gy) do you use, and why?</p>
+<details><summary>Reveal answer</summary><div class="answer">Gy (the kernel that approximates ∂f/∂y, the vertical gradient) — a horizontal edge corresponds to a rapid intensity change as you move vertically (top-to-bottom) across the waterline, so the vertical derivative Gy will have a large magnitude there, while Gx (horizontal gradient) stays near zero along the edge.</div></details>
+</div>
+</div>
+<div class="qgroup" id="spatial-hard">
+<div class="question"><span class="qlabel hard">HARD</span>
+<p>Derive/explain why 2D convolution with an N×N image and a k×k kernel is O(N²k²) naively, then explain two distinct algorithmic strategies to reduce this: (a) kernel separability, (b) FFT-based convolution. State when each is preferable.</p>
+<details><summary>Reveal answer</summary><div class="answer">
+Naive cost: for each of N² output pixels, we sum k² kernel-weighted terms → O(N²k²).
+
+(a) <b>Separable convolution</b>: if K = v·hᵀ, convolve rows with h (O(N²k)) then columns of the result with v (O(N²k)), total O(N²k) — a factor-of-k speedup. Preferable when the kernel is genuinely separable (Gaussian, box, Sobel) and k is moderate.
+
+(b) <b>FFT-based convolution</b>: by the convolution theorem, spatial convolution equals element-wise multiplication in the frequency domain. Compute FFT(image) and FFT(kernel, zero-padded to image size) in O(N² log N) each, multiply element-wise in O(N²), then inverse FFT in O(N² log N). Total O(N² log N), independent of k. Preferable when k is large (comparable to N) or non-separable, since N²k² can exceed N² log N once k > log N.
+</div></details>
+</div>
+</div>
+</div>
+</section>
+
+<!-- ============ 5. EDGES & CORNERS ============ -->
+<section id="edges">
+<h2 class="section-title"><span class="num">5</span>Detecting Edges & Corners</h2>
+<div class="card">
+<h3>Core idea</h3>
+<p>Edges are locations of rapid intensity change — modeled via the image gradient <code>∇f = (∂f/∂x, ∂f/∂y)</code>. Corners are points where the gradient changes direction sharply in two independent directions (high "cornerness").</p>
+<h4>Canny edge detection pipeline</h4>
+<ol>
+<li><b>Smoothing</b>: Gaussian blur to reduce noise sensitivity of derivatives.</li>
+<li><b>Gradient computation</b>: Sobel Gx, Gy → magnitude <code>M = √(Gx²+Gy²)</code>, direction <code>θ = atan2(Gy,Gx)</code>.</li>
+<li><b>Non-maximum suppression</b>: along the gradient direction θ, keep a pixel only if its magnitude M is a local maximum compared to its two neighbors in that direction — thins wide edge ridges to 1-pixel width.</li>
+<li><b>Hysteresis thresholding</b>: two thresholds (high, low). Pixels above high are "strong" edges (kept). Pixels between low and high are kept only if connected (via 8-connectivity, typically BFS/DFS) to a strong edge; otherwise discarded.</li>
+</ol>
+<div class="formula">M(x,y) = √(Gx(x,y)² + Gy(x,y)²),   θ(x,y) = atan2(Gy, Gx)</div>
+<h4>Harris corner detection — mechanics</h4>
+<p>For a window W around pixel (x,y), define the structure tensor (second-moment matrix):</p>
+<div class="formula">M = Σ_{W} [ Ix²   IxIy ;  IxIy   Iy² ]   (windowed, often Gaussian-weighted)</div>
+<p>Corner response: <code>R = det(M) - k·trace(M)²</code>, with k ≈ 0.04–0.06. Large R (both eigenvalues of M large) ⟹ corner; one large eigenvalue ⟹ edge; both small ⟹ flat region.</p>
+<pre><code><span class="comment">// Pseudocode: Harris response map</span>
+<span class="keyword">for</span> each pixel (x,y):
+    compute Ix, Iy via Sobel
+    M[0][0] = gaussianWeightedSum(Ix*Ix, window)
+    M[1][1] = gaussianWeightedSum(Iy*Iy, window)
+    M[0][1] = M[1][0] = gaussianWeightedSum(Ix*Iy, window)
+    <span class="keyword">float</span> detM  = M[0][0]*M[1][1] - M[0][1]*M[1][0];
+    <span class="keyword">float</span> traceM= M[0][0] + M[1][1];
+    R(x,y) = detM - k * traceM * traceM;
+<span class="comment">// then non-max suppression + threshold on R to get discrete corners</span></code></pre>
+<div class="analogy"><b>Landscape analogy:</b> Along a rocky coastline, the boundary between the sea and cliffs is an edge — a 1D ridge of rapid brightness change, well captured by gradient magnitude. Where a jagged rock outcrop juts out and the boundary changes direction abruptly (a "point" of the rock), that's a corner — intensity changes sharply in two directions at once, which is exactly what the Harris matrix's two large eigenvalues detect.</div>
+</div>
+
+<div class="qbank">
+<div class="qtabs">
+  <div class="qtab active-easy" onclick="showQ('edges','easy')">Easy</div>
+  <div class="qtab" onclick="showQ('edges','medium')">Medium</div>
+  <div class="qtab" onclick="showQ('edges','hard')">Hard</div>
+</div>
+<div class="qgroup show" id="edges-easy">
+<div class="question"><span class="qlabel easy">EASY</span>
+<p>At a given pixel, Gx = 3, Gy = 4. What is the gradient magnitude?</p>
+<details><summary>Reveal answer</summary><div class="answer">M = √(3² + 4²) = √25 = 5.</div></details>
+</div>
+<div class="question"><span class="qlabel easy">EASY</span>
+<p>In Harris corner detection, what does it mean if both eigenvalues of M are small?</p>
+<details><summary>Reveal answer</summary><div class="answer">The local region is flat/homogeneous (little intensity variation in any direction) — e.g., a patch of uniform sky or calm sea — not a corner or edge.</div></details>
+</div>
+</div>
+<div class="qgroup" id="edges-medium">
+<div class="question"><span class="qlabel medium">MEDIUM</span>
+<p>Why does Canny use two thresholds (hysteresis) instead of a single threshold on gradient magnitude?</p>
+<details><summary>Reveal answer</summary><div class="answer">A single threshold forces a hard tradeoff: too high misses faint but genuine edge segments (broken edges), too low lets noise through as spurious edges. Hysteresis lets weak-but-genuine edge pixels survive if they're connected to a strong edge (likely part of the same real contour), while isolated weak responses (likely noise) are discarded — combining sensitivity with robustness.</div></details>
+</div>
+<div class="question"><span class="qlabel medium">MEDIUM</span>
+<p>Trace non-maximum suppression conceptually: at a pixel on a wide, blurred edge, gradient magnitude is high across 4 pixels in a row (all similar values) perpendicular to the edge direction. What does NMS produce?</p>
+<details><summary>Reveal answer</summary><div class="answer">NMS keeps only the single pixel (or few, in case of true ties) that is the local maximum along the gradient direction, suppressing (zeroing) the other 3 — producing a thinned, ideally 1-pixel-wide edge instead of a 4-pixel-wide blurry ridge.</div></details>
+</div>
+</div>
+<div class="qgroup" id="edges-hard">
+<div class="question"><span class="qlabel hard">HARD</span>
+<p>Explain why the Harris corner response <code>R = det(M) - k·trace(M)²</code> is designed this way instead of just thresholding the smaller eigenvalue λ_min directly (as in the related Shi-Tomasi detector), and give one practical advantage of each formulation.</p>
+<details><summary>Reveal answer</summary><div class="answer">
+det(M) = λ1·λ2 and trace(M) = λ1+λ2, so R is a smooth polynomial combination of both eigenvalues that avoids explicitly computing eigenvalues (which requires a square root / solving a quadratic characteristic equation per pixel) — det and trace are computed directly and cheaply from the matrix entries (Ix², Iy², IxIy sums), making Harris's R computation O(1) per pixel with just arithmetic.
+
+Shi-Tomasi directly uses λ_min = min(λ1,λ2) (via the quadratic formula), which is a more direct/interpretable "cornerness" measure (both directions must have significant gradient variation) and tends to produce more stable corners for tracking, at the modest extra cost of computing the eigenvalues explicitly.
+
+Practical advantage of Harris: cheaper per-pixel computation (no sqrt), good for real-time. Practical advantage of Shi-Tomasi: more geometrically interpretable, often preferred for feature tracking (e.g., optical flow) since λ_min directly bounds how well a point can be localized in both directions.
+</div></details>
+</div>
+</div>
+</div>
+</section>
+
+<!-- ============ 6. SEGMENTATION ============ -->
+<section id="seg">
+<h2 class="section-title"><span class="num">6</span>Segmentation</h2>
+<div class="card">
+<h3>Core idea</h3>
+<p>Segmentation partitions an image into regions that share some property (intensity, texture, semantic label) — e.g., separating "lung," "kidney," "heart" in a CT scan, or "sky," "sea," "rock" in a coastline photo.</p>
+<h4>Classical approaches</h4>
+<table>
+<tr><th>Method</th><th>Mechanics</th></tr>
+<tr><td>Thresholding (global/Otsu)</td><td>Pick intensity threshold T; Otsu's method picks T that minimizes intra-class variance (or maximizes inter-class variance) of the two resulting pixel groups, searched over all possible T using cumulative histogram statistics.</td></tr>
+<tr><td>Region growing</td><td>Start from seed pixel(s); iteratively add neighboring pixels (BFS/DFS from a queue) if they satisfy a similarity criterion (e.g., |intensity - region mean| &lt; ε).</td></tr>
+<tr><td>Watershed</td><td>Treat the (gradient) image as a topographic surface; "flood" from local minima; regions merge where water from different basins would meet, forming watershed lines = segment boundaries.</td></tr>
+<tr><td>Graph-cut / Normalized cut</td><td>Model image as a graph (pixels = nodes, edge weight = similarity); segmentation = finding a min-cut (or normalized cut) that separates dissimilar regions while keeping similar pixels together.</td></tr>
+</table>
+<h4>Otsu's threshold — algorithmic sketch</h4>
+<pre><code><span class="keyword">int</span> otsuThreshold(<span class="keyword">const</span> std::vector&lt;<span class="keyword">int</span>&gt;&amp; hist, <span class="keyword">int</span> N) {
+    <span class="keyword">double</span> sumAll = 0;
+    <span class="keyword">for</span> (<span class="keyword">int</span> k = 0; k &lt; 256; k++) sumAll += k * hist[k];
+
+    <span class="keyword">double</span> sumB = 0; <span class="keyword">int</span> wB = 0;
+    <span class="keyword">double</span> bestVar = -1; <span class="keyword">int</span> bestT = 0;
+
+    <span class="keyword">for</span> (<span class="keyword">int</span> t = 0; t &lt; 256; t++) {
+        wB += hist[t];                     <span class="comment">// weight of background class</span>
+        <span class="keyword">if</span> (wB == 0) <span class="keyword">continue</span>;
+        <span class="keyword">int</span> wF = N - wB;                    <span class="comment">// weight of foreground class</span>
+        <span class="keyword">if</span> (wF == 0) <span class="keyword">break</span>;
+        sumB += t * hist[t];
+        <span class="keyword">double</span> mB = sumB / wB, mF = (sumAll - sumB) / wF;
+        <span class="keyword">double</span> between = (<span class="keyword">double</span>)wB * wF * (mB - mF) * (mB - mF);
+        <span class="keyword">if</span> (between &gt; bestVar) { bestVar = between; bestT = t; }
+    }
+    <span class="keyword">return</span> bestT;
+}</code></pre>
+<div class="analogy"><b>Landscape analogy:</b> Thresholding a coastline photo into "sea" vs. "rock" works well only if their intensity histograms form two clean bumps (bimodal). Region growing instead starts from a seed click inside the sea and "spreads like water" pixel-by-pixel, absorbing neighbors of similar shade — but it will leak across a boundary if the sea and wet rock have nearly identical brightness (weak/ambiguous boundary), which is exactly the failure mode watershed and graph-cut methods try to handle more robustly.</div>
+</div>
+
+<div class="qbank">
+<div class="qtabs">
+  <div class="qtab active-easy" onclick="showQ('seg','easy')">Easy</div>
+  <div class="qtab" onclick="showQ('seg','medium')">Medium</div>
+  <div class="qtab" onclick="showQ('seg','hard')">Hard</div>
+</div>
+<div class="qgroup show" id="seg-easy">
+<div class="question"><span class="qlabel easy">EASY</span>
+<p>What is the key assumption that makes global thresholding work well?</p>
+<details><summary>Reveal answer</summary><div class="answer">The image's intensity histogram is (approximately) bimodal — foreground and background occupy distinct, separable intensity ranges with a clear valley between them.</div></details>
+</div>
+<div class="question"><span class="qlabel easy">EASY</span>
+<p>In region growing, what data structure is naturally used to manage the "frontier" of pixels to examine next?</p>
+<details><summary>Reveal answer</summary><div class="answer">A queue (BFS) or stack (DFS) holding candidate neighbor pixels awaiting the similarity test.</div></details>
+</div>
+</div>
+<div class="qgroup" id="seg-medium">
+<div class="question"><span class="qlabel medium">MEDIUM</span>
+<p>Why does watershed segmentation typically need a "marker" or pre-processing step (e.g., computing the gradient magnitude first, or using distance transform + local minima) instead of running directly on raw pixel intensities?</p>
+<details><summary>Reveal answer</summary><div class="answer">Running watershed directly on raw intensities of a noisy/textured image produces severe over-segmentation — every small local minimum becomes its own basin, yielding thousands of tiny regions. Pre-processing (e.g., smoothing, using gradient magnitude so basins correspond to homogeneous regions and ridges correspond to edges, or seeding with markers from another detector) constrains the number of basins to meaningful regions.</div></details>
+</div>
+<div class="question"><span class="qlabel medium">MEDIUM</span>
+<p>Otsu's method maximizes between-class variance. Explain in one or two sentences why this is mathematically equivalent to minimizing within-class variance for a fixed total variance.</p>
+<details><summary>Reveal answer</summary><div class="answer">Total variance of the whole histogram = within-class variance + between-class variance (a fixed decomposition, analogous to ANOVA's total sum of squares). Since total variance is constant regardless of threshold T, maximizing between-class variance over T is exactly equivalent to minimizing within-class variance over T.</div></details>
+</div>
+</div>
+<div class="qgroup" id="seg-hard">
+<div class="question"><span class="qlabel hard">HARD</span>
+<p>Formulate image segmentation as a graph-cut problem: define the graph, the cost function for a cut, and explain why a plain minimum cut is biased toward tiny/trivial partitions, motivating the Normalized Cut objective.</p>
+<details><summary>Reveal answer</summary><div class="answer">
+Graph construction: each pixel is a node; edges connect nearby pixels (or all pairs, weighted by decaying similarity) with weight w(i,j) reflecting similarity (e.g., based on intensity difference and spatial proximity, often w = exp(-|Ii-Ij|²/σ²) · exp(-dist(i,j)²/σd²)).
+
+Min-cut cost: cut(A,B) = Σ_{i∈A, j∈B} w(i,j) — the total edge weight severed to separate the graph into disjoint sets A and B.
+
+Problem with plain min-cut: since cut cost only sums severed edge weights without normalizing by partition size, the global minimum is often achieved by isolating a single low-degree node (e.g., one noisy/isolated pixel) as its own tiny partition — because cutting off one node severs very few edges, giving a trivially small cut cost, regardless of whether that's a meaningful segmentation.
+
+Normalized Cut fix: Ncut(A,B) = cut(A,B)/assoc(A,V) + cut(A,B)/assoc(B,V), where assoc(A,V) is the total edge weight from A to the whole graph. Dividing by each partition's total association penalizes cuts that isolate small partitions (since assoc(A,V) would be small, inflating the ratio), favoring balanced, semantically meaningful splits. Finding the exact optimal Ncut is NP-hard, but it can be approximated via a generalized eigenvalue problem on the graph Laplacian (spectral clustering).
+</div></details>
+</div>
+</div>
+</div>
+</section>
+
+<!-- ============ 7. DENOISING ============ -->
+<section id="denoise">
+<h2 class="section-title"><span class="num">7</span>Denoising</h2>
+<div class="card">
+<h3>Core idea</h3>
+<p>Denoising estimates the "clean" underlying signal f from a noisy observation <code>g = f + n</code> (additive noise model), exploiting the assumption that noise is high-frequency/random while true signal has spatial structure (smoothness, self-similarity, sparsity in some transform domain).</p>
+<h4>Method comparison</h4>
+<table>
+<tr><th>Filter</th><th>Mechanics</th><th>Edge preservation</th></tr>
+<tr><td>Mean/Gaussian</td><td>Local weighted average</td><td>Poor — blurs edges</td></tr>
+<tr><td>Median filter</td><td>Replace pixel with median of neighborhood</td><td>Good for impulse/salt-and-pepper noise; preserves edges better than mean</td></tr>
+<tr><td>Bilateral filter</td><td>Weight neighbors by both spatial distance AND intensity similarity</td><td>Excellent — smooths flat regions while respecting edges</td></tr>
+<tr><td>Non-local means</td><td>Weight neighbors (even far away) by patch similarity, not just proximity</td><td>Excellent, exploits image self-similarity/repetition</td></tr>
+</table>
+<h4>Bilateral filter formula</h4>
+<div class="formula">g(x) = (1/W) Σ_{y∈N(x)} f(y) · exp(-‖x-y‖²/2σs²) · exp(-|f(x)-f(y)|²/2σr²)</div>
+<p>where <code>W</code> normalizes the weights to sum to 1. The spatial Gaussian term (σs) behaves like a normal blur; the range/intensity Gaussian term (σr) down-weights neighbors whose intensity differs a lot from the center pixel — so it avoids averaging across an edge.</p>
+<pre><code><span class="comment">// Pseudocode: bilateral filter at one pixel</span>
+<span class="keyword">float</span> bilateralAt(<span class="keyword">const</span> Image&amp; src, <span class="keyword">int</span> x, <span class="keyword">int</span> y, <span class="keyword">int</span> radius, <span class="keyword">float</span> sigmaS, <span class="keyword">float</span> sigmaR) {
+    <span class="keyword">float</span> centerVal = src.at(y,x);
+    <span class="keyword">float</span> sum = 0, wsum = 0;
+    <span class="keyword">for</span> (<span class="keyword">int</span> dy = -radius; dy &lt;= radius; dy++)
+      <span class="keyword">for</span> (<span class="keyword">int</span> dx = -radius; dx &lt;= radius; dx++) {
+        <span class="keyword">int</span> ny = y+dy, nx = x+dx;
+        <span class="keyword">if</span> (!inBounds(ny,nx)) <span class="keyword">continue</span>;
+        <span class="keyword">float</span> spatialW = exp(-(dx*dx+dy*dy) / (2*sigmaS*sigmaS));
+        <span class="keyword">float</span> diff = src.at(ny,nx) - centerVal;
+        <span class="keyword">float</span> rangeW   = exp(-(diff*diff) / (2*sigmaR*sigmaR));
+        <span class="keyword">float</span> w = spatialW * rangeW;
+        sum += w * src.at(ny,nx);
+        wsum += w;
+      }
+    <span class="keyword">return</span> sum / wsum;
+}</code></pre>
+<div class="analogy"><b>Landscape analogy:</b> A noisy nighttime photo of a coastal fort looks grainy — a Gaussian blur would smooth the grain but also blur the sharp stone-vs-sky boundary into a soft gradient. A bilateral filter instead only averages pixels that are both nearby AND similar in brightness — so it smooths the grainy noise within the uniform "sky" region and within the uniform "stone" region separately, while refusing to blend across the sharp boundary between them.</div>
+</div>
+
+<div class="qbank">
+<div class="qtabs">
+  <div class="qtab active-easy" onclick="showQ('denoise','easy')">Easy</div>
+  <div class="qtab" onclick="showQ('denoise','medium')">Medium</div>
+  <div class="qtab" onclick="showQ('denoise','hard')">Hard</div>
+</div>
+<div class="qgroup show" id="denoise-easy">
+<div class="question"><span class="qlabel easy">EASY</span>
+<p>Which filter is generally best for removing "salt-and-pepper" (impulse) noise, and why not a mean filter?</p>
+<details><summary>Reveal answer</summary><div class="answer">Median filter — it's robust to outliers since the median of a neighborhood ignores extreme impulse values entirely (an impulse just becomes one candidate that gets ranked to an extreme and discarded from the middle position). A mean filter instead averages the impulse's extreme value into the result, spreading its influence (smearing) rather than removing it.</div></details>
+</div>
+<div class="question"><span class="qlabel easy">EASY</span>
+<p>For a 3×3 neighborhood [5, 200, 6, 4, 7, 5, 6, 5, 4] (one pixel is a "salt" outlier at 200), what does a median filter output?</p>
+<details><summary>Reveal answer</summary><div class="answer">Sorted: 4,4,5,5,5,6,6,7,200. Median (5th of 9) = 5. The 200 outlier is completely discarded.</div></details>
+</div>
+</div>
+<div class="qgroup" id="denoise-medium">
+<div class="question"><span class="qlabel medium">MEDIUM</span>
+<p>In the bilateral filter, what happens to its behavior as σr → ∞ (range sigma becomes very large)?</p>
+<details><summary>Reveal answer</summary><div class="answer">The range weight term exp(-diff²/2σr²) → 1 for all diff (since diff²/σr² → 0), so the range weighting vanishes and the filter reduces to a pure spatial Gaussian blur — it loses its edge-preserving property.</div></details>
+</div>
+<div class="question"><span class="qlabel medium">MEDIUM</span>
+<p>Why is Non-Local Means often more effective than bilateral filtering on images with repetitive texture, e.g., a photo of a pebble beach?</p>
+<details><summary>Reveal answer</summary><div class="answer">Bilateral filtering only considers a local spatial neighborhood around each pixel. Non-Local Means instead compares small patches around the target pixel to patches anywhere else in the image (or a large search window), weighting by patch similarity — so for repetitive texture like pebbles, it can average many genuinely similar patches from distant parts of the image, producing a much better noise estimate than any local neighborhood alone could provide.</div></details>
+</div>
+</div>
+<div class="qgroup" id="denoise-hard">
+<div class="question"><span class="qlabel hard">HARD</span>
+<p>Formulate denoising as a variational/energy-minimization problem (Total Variation denoising): write the objective, explain the role of each term, and describe qualitatively why TV denoising preserves edges better than a quadratic (Tikhonov/L2) smoothness penalty.</p>
+<details><summary>Reveal answer</summary><div class="answer">
+Objective (Rudin-Osher-Fatemi / TV denoising):
+E(u) = ∫ (u - g)² dx  +  λ ∫ |∇u| dx
+
+First term: data fidelity — keeps the denoised result u close to the noisy observation g. Second term: regularization — penalizes the total variation (L1 norm of the gradient magnitude) of u, encouraging piecewise-smooth solutions. λ balances fidelity vs. smoothness.
+
+Why TV (L1 on gradient) preserves edges better than Tikhonov (L2 on gradient, ∫|∇u|² dx): the L2 penalty grows quadratically with gradient magnitude, so it heavily penalizes any large jump (edge) and strongly "wants" to smooth it away — sharp edges get rounded off. The L1 penalty grows only linearly with gradient magnitude, so it doesn't disproportionately punish a single large jump versus many small jumps with the same total variation — the optimizer is willing to keep one sharp edge (low marginal cost per unit of variation) rather than being forced to distribute that variation as blur across many pixels. This is the same sparsity-inducing property of L1 norms seen elsewhere (e.g., LASSO regression) — it favors solutions with few, large, well-localized discontinuities over many small ones.
+</div></details>
+</div>
+</div>
+</div>
+</section>
+
+<!-- ============ 8. FOURIER ============ -->
+<section id="fourier">
+<h2 class="section-title"><span class="num">8</span>Fourier Analysis</h2>
+<div class="card">
+<h3>Core idea</h3>
+<p>Any image can be represented as a weighted sum of 2D sinusoids of varying spatial frequency, orientation, and phase — the 2D Discrete Fourier Transform (DFT). Low frequencies capture smooth/slowly-varying content (overall shape, illumination); high frequencies capture fine detail, texture, and edges.</p>
+<div class="formula">F(u,v) = Σ_{x=0}^{M-1} Σ_{y=0}^{N-1} f(x,y) · e^{-j2π(ux/M + vy/N)}</div>
+<h4>Key properties (algorithmically relevant)</h4>
+<ul>
+<li><b>Convolution theorem</b>: convolution in spatial domain = element-wise multiplication in frequency domain, and vice versa. This is the basis of FFT-based fast convolution.</li>
+<li><b>Separability</b>: the 2D DFT can be computed as 1D DFT on rows, then 1D DFT on columns — O(N² log N) via FFT instead of O(N⁴) naive.</li>
+<li><b>Nyquist–Shannon sampling theorem</b>: to avoid aliasing, sampling rate must exceed 2× the highest spatial frequency present in the signal — directly explains the moiré artifacts discussed in Section 1/2.</li>
+<li><b>Low-pass filtering</b>: zero out (or attenuate) high-frequency coefficients, then inverse-FFT → blurred image. <b>High-pass filtering</b>: zero out low frequencies → edge/detail map.</li>
+</ul>
+<h4>FFT-based low-pass filter — pseudocode</h4>
+<pre><code>Image lowPassFFT(<span class="keyword">const</span> Image&amp; src, <span class="keyword">float</span> cutoffRadius) {
+    ComplexImage F = fft2D(src);                 <span class="comment">// O(N^2 log N)</span>
+    F = fftshift(F);                              <span class="comment">// move DC (0 freq) to center</span>
+    <span class="keyword">for</span> (<span class="keyword">int</span> u = 0; u &lt; F.rows; u++)
+      <span class="keyword">for</span> (<span class="keyword">int</span> v = 0; v &lt; F.cols; v++) {
+        <span class="keyword">float</span> dist = distFromCenter(u, v, F.rows, F.cols);
+        <span class="keyword">if</span> (dist &gt; cutoffRadius) F.at(u,v) = 0;        <span class="comment">// ideal LPF; Gaussian LPF multiplies by a smooth mask instead</span>
+      }
+    F = ifftshift(F);
+    <span class="keyword">return</span> real(ifft2D(F));                       <span class="comment">// back to spatial domain</span>
+}</code></pre>
+<div class="analogy"><b>Landscape analogy:</b> Picture the Fourier transform of a coastline photo as decomposing the scene into "waves" of brightness at every scale — the slow, broad wave capturing the overall sea/sky split (low frequency), and the tightly-packed ripples capturing individual rocks and foam texture (high frequency). Zeroing out the high-frequency components and inverting is exactly like photographing the same coastline through fog — the general shapes remain, but all the fine texture (foam, pebbles) disappears.</div>
+</div>
+
+<div class="qbank">
+<div class="qtabs">
+  <div class="qtab active-easy" onclick="showQ('fourier','easy')">Easy</div>
+  <div class="qtab" onclick="showQ('fourier','medium')">Medium</div>
+  <div class="qtab" onclick="showQ('fourier','hard')">Hard</div>
+</div>
+<div class="qgroup show" id="fourier-easy">
+<div class="question"><span class="qlabel easy">EASY</span>
+<p>In the frequency-domain representation of an image, where does the DC component (average brightness) appear after fftshift?</p>
+<details><summary>Reveal answer</summary><div class="answer">At the exact center of the spectrum (zero frequency in both u and v).</div></details>
+</div>
+<div class="question"><span class="qlabel easy">EASY</span>
+<p>Does a low-pass filter sharpen or blur an image?</p>
+<details><summary>Reveal answer</summary><div class="answer">Blurs it — low-pass filtering removes high-frequency content, which is what encodes sharp edges and fine detail.</div></details>
+</div>
+</div>
+<div class="qgroup" id="fourier-medium">
+<div class="question"><span class="qlabel medium">MEDIUM</span>
+<p>State the Nyquist sampling theorem and connect it to why photographing a fine, regularly-spaced iron railing (or brick pattern) on a historical building can produce moiré artifacts in a digital photo.</p>
+<details><summary>Reveal answer</summary><div class="answer">Nyquist theorem: to reconstruct a signal without aliasing, the sampling rate must be at least twice the highest frequency component present in the signal. A fine railing/brick pattern has a high spatial frequency (short repeat period); if the camera sensor's pixel pitch samples at a rate below twice that pattern's frequency (once projected through the lens), the true high frequency gets aliased down to a spurious lower frequency in the captured image — appearing as wavy moiré fringes not present in the real scene.</div></details>
+</div>
+<div class="question"><span class="qlabel medium">MEDIUM</span>
+<p>Why is FFT-based convolution (O(N² log N)) not always faster in practice than direct spatial convolution (O(N²k²)) for small kernels like a 3×3 Sobel?</p>
+<details><summary>Reveal answer</summary><div class="answer">For small k (e.g., k=3, k²=9), direct convolution's O(N²k²) = O(9N²) can be smaller than FFT's O(N² log N) once log N exceeds k² — plus FFT has additional overhead (forward FFT of image, forward FFT/padding of kernel, complex multiplication, inverse FFT, and memory for complex-valued intermediate arrays). FFT convolution only wins decisively when the kernel is large (k² approaching or exceeding log N), e.g., large-radius blurs or matched filtering.</div></details>
+</div>
+</div>
+<div class="qgroup" id="fourier-hard">
+<div class="question"><span class="qlabel hard">HARD</span>
+<p>Prove/explain the convolution theorem's practical implication: given a K×K kernel and an image you want to convolve using FFT, describe the correct zero-padding procedure needed to avoid <i>circular</i ​convolution artifacts, and explain why naively multiplying FFT(image) × FFT(kernel) without padding produces wraparound errors.</p>
+<details><summary>Reveal answer</summary><div class="answer">
+The DFT inherently treats the signal as periodic (circular) — multiplying two DFTs and inverse-transforming computes <b>circular</b> convolution, where the kernel "wraps around" the image boundary as if the image tiled infinitely. For a K×K kernel applied near the edge of an N×N image, part of the kernel's support would, under circular convolution, incorrectly pull in pixels from the opposite edge of the image (wraparound), producing seam artifacts at the borders that don't correspond to true linear convolution.
+
+Correct procedure ("linear convolution via FFT"): zero-pad both the image and the kernel to size at least (N+K-1) × (N+K-1) before taking their FFTs. This creates enough "buffer" so that the circular wraparound region only touches zero-padding rather than real image content, making the result of the (now larger) circular convolution identical to true linear convolution within the valid region. After inverse FFT, crop back to the desired output size (either "full," "same," or "valid," matching standard convolution semantics).
+</div></details>
+</div>
+</div>
+</div>
+</section>
+
+<!-- ============ 9. PCA ============ -->
+<section id="pca">
+<h2 class="section-title"><span class="num">9</span>Principal Component Analysis</h2>
+<div class="card">
+<h3>Core idea</h3>
+<p>PCA finds an orthogonal basis (eigenvectors of the data covariance matrix) that captures the directions of maximum variance in the data — used for dimensionality reduction, image compression, denoising (project onto top-k components), and feature extraction (e.g., Eigenfaces).</p>
+<h4>Algorithm</h4>
+<ol>
+<li>Flatten each image (or patch) into a vector <code>xᵢ ∈ ℝᵈ</code>. Stack N samples into matrix <code>X ∈ ℝ^{N×d}</code>.</li>
+<li>Compute mean vector <code>μ = (1/N)Σxᵢ</code>; center the data: <code>X̃ = X - μ</code>.</li>
+<li>Compute covariance matrix <code>C = (1/N) X̃ᵀ X̃ ∈ ℝ^{d×d}</code>.</li>
+<li>Eigendecompose <code>C</code>: eigenvectors <code>v_j</code> (principal components / "eigenimages"), eigenvalues <code>λ_j</code> (variance explained along each direction).</li>
+<li>Sort eigenvectors by descending eigenvalue; keep top-k as the projection matrix <code>V_k ∈ ℝ^{d×k}</code>.</li>
+<li>Project any sample: <code>z = V_kᵀ(x - μ)</code> ∈ ℝᵏ (compressed/reduced representation). Reconstruct: <code>x̂ = μ + V_k z</code>.</li>
+</ol>
+<div class="formula">C v_j = λ_j v_j        (eigenvalue problem on the covariance matrix)</div>
+<h4>Why it matters for images: the dimensionality trap</h4>
+<p>For a dataset of N face images each of size 100×100 = 10,000 pixels (d=10,000), the covariance matrix C is 10,000×10,000 — too large to eigendecompose directly if N ≪ d. <b>Trick</b>: eigendecompose the smaller N×N matrix <code>X̃X̃ᵀ</code> instead (its nonzero eigenvalues match those of <code>X̃ᵀX̃</code>), then map the resulting eigenvectors back to d-dimensional space via <code>v_j = X̃ᵀ u_j / √λ_j</code>.</p>
+<pre><code><span class="comment">// Conceptual PCA via SVD (numerically preferred over explicit covariance eigendecomposition)</span>
+Matrix Xc = X.rowwiseSubtract(mean(X));   <span class="comment">// center</span>
+<span class="comment">// SVD: Xc = U * S * V^T</span>
+<span class="keyword">auto</span> [U, S, V] = svd(Xc);
+<span class="comment">// columns of V are principal directions; S contains sqrt(eigenvalues) of covariance</span>
+Matrix Vk = V.leftCols(k);                <span class="comment">// top-k components</span>
+Matrix Z  = Xc * Vk;                      <span class="comment">// N x k reduced representation</span></code></pre>
+<div class="analogy"><b>Landscape analogy:</b> Imagine you have 500 photographs of the same rocky coastline taken at different times of day and tide levels. PCA finds the "modes of variation" across the dataset — perhaps the top principal component captures overall brightness (day vs. night), the second captures tide height (how much rock is exposed vs. submerged), and so on. Instead of storing each full-resolution photo, you can store just a handful of coefficients (how much of each mode is present) plus the shared "basis photos" (eigenimages) — a massive compression, as long as most of the coastline's visual variation really does live in a few dominant directions.</div>
+</div>
+
+<div class="qbank">
+<div class="qtabs">
+  <div class="qtab active-easy" onclick="showQ('pca','easy')">Easy</div>
+  <div class="qtab" onclick="showQ('pca','medium')">Medium</div>
+  <div class="qtab" onclick="showQ('pca','hard')">Hard</div>
+</div>
+<div class="qgroup show" id="pca-easy">
+<div class="question"><span class="qlabel easy">EASY</span>
+<p>What does the eigenvalue λ_j associated with principal component v_j represent?</p>
+<details><summary>Reveal answer</summary><div class="answer">The amount of variance in the dataset explained/captured along the direction of eigenvector v_j.</div></details>
+</div>
+<div class="question"><span class="qlabel easy">EASY</span>
+<p>Before computing the covariance matrix in PCA, why must the data be mean-centered first?</p>
+<details><summary>Reveal answer</summary><div class="answer">Covariance is defined as the expected product of deviations from the mean; if the data isn't centered, the resulting matrix conflates the mean offset with true variance/covariance structure, and the eigenvectors would reflect the direction toward the origin/mean rather than the true directions of variation.</div></details>
+</div>
+</div>
+<div class="qgroup" id="pca-medium">
+<div class="question"><span class="qlabel medium">MEDIUM</span>
+<p>You run PCA on a dataset of coastline photographs and find eigenvalues λ = [820, 150, 20, 6, 4]. If you keep only the top 2 components, what fraction of total variance is retained?</p>
+<details><summary>Reveal answer</summary><div class="answer">Total = 820+150+20+6+4 = 1000. Top 2 sum = 820+150 = 970. Fraction retained = 970/1000 = 97%.</div></details>
+</div>
+<div class="question"><span class="qlabel medium">MEDIUM</span>
+<p>Explain the "SVD trick" for PCA when N (samples) ≪ d (pixels per image): why do we eigendecompose X̃X̃ᵀ (size N×N) instead of X̃ᵀX̃ (size d×d), and how do we recover the d-dimensional eigenvectors afterward?</p>
+<details><summary>Reveal answer</summary><div class="answer">X̃X̃ᵀ (N×N) is dramatically cheaper to eigendecompose than X̃ᵀX̃ (d×d) when N≪d — e.g., N=200, d=10,000 makes a 200×200 eigendecomposition trivial versus an infeasible 10,000×10,000 one. The nonzero eigenvalues of X̃X̃ᵀ and X̃ᵀX̃ are identical (they share the same nonzero spectrum, a standard linear algebra fact). Given eigenvector u_j of X̃X̃ᵀ with eigenvalue λ_j, the corresponding d-dimensional eigenvector of X̃ᵀX̃ is recovered as v_j = X̃ᵀu_j / √λ_j (this follows directly from substituting into the eigenvalue equations and normalizing).</div></details>
+</div>
+</div>
+<div class="qgroup" id="pca-hard">
+<div class="question"><span class="qlabel hard">HARD</span>
+<p>Compare PCA-based image reconstruction to JPEG-style block-DCT compression conceptually: both project data onto a fixed/learned orthogonal basis and keep top coefficients. What is the fundamental difference in how the basis is obtained, and what's the tradeoff (data-dependence vs. generality)?</p>
+<details><summary>Reveal answer</summary><div class="answer">
+DCT (used in JPEG) uses a fixed, universal basis of cosine functions at various frequencies — the same basis regardless of the specific image content. It doesn't require any training data; the same transform applies to any image, block-wise, making it fast, standardized, and hardware-friendly (real-time encode/decode, no need to ship a learned basis).
+
+PCA learns a data-dependent basis: the eigenvectors are computed from the specific covariance structure of a given training set (e.g., a collection of face images or coastline photos). This basis is provably <i>optimal</i> in the least-squares reconstruction sense for that specific data distribution (Eckart-Young theorem: truncating to top-k PCA components minimizes reconstruction error among all rank-k linear approximations) — it can achieve far better compression than DCT for data with strong shared structure (e.g., faces, where a handful of "eigenfaces" reconstruct most identity variation).
+
+Tradeoff: PCA's optimality is specific to the training distribution — it generalizes poorly to images unlike the training set (e.g., eigenfaces reconstruct faces well but poorly reconstruct arbitrary natural scenes), and both the basis vectors themselves and the projection coefficients must be computed/stored, adding training cost and storage overhead absent in DCT. DCT sacrifices data-optimality for universality, simplicity, and speed.
+</div></details>
+</div>
+</div>
+</div>
+</section>
+
+<!-- ============ 10. DNN ============ -->
+<section id="dnn">
+<h2 class="section-title"><span class="num">10</span>Deep Neural Networks for Images</h2>
+<div class="card">
+<h3>Core idea</h3>
+<p>Rather than hand-designing features (edges via Sobel, corners via Harris, textures via fixed filter banks), deep networks — especially Convolutional Neural Networks (CNNs) — <b>learn</b> hierarchical feature extractors directly from data, optimized end-to-end for a task (classification, segmentation, detection).</p>
+<h4>Convolutional layer — mechanics</h4>
+<p>A conv layer applies a set of learnable K×K filters (analogous to the hand-crafted kernels in Section 4, but their weights are learned via gradient descent) via sliding-window convolution/correlation, producing a stack of feature maps. Stacking layers builds a hierarchy: early layers learn edge/blob-like filters (interpretable, similar to Sobel/Gabor filters); deeper layers combine these into increasingly complex, task-specific features (parts, then whole objects) — matching the slide's diagram of increasingly complex features from simple strokes to full shapes.</p>
+<div class="formula">y[i,j,c'] = Σ_{di,dj,c} x[i+di, j+dj, c] · W[di,dj,c,c'] + b[c']</div>
+<h4>Key architectural building blocks</h4>
+<table>
+<tr><th>Component</th><th>Purpose</th></tr>
+<tr><td>Convolution + activation (ReLU)</td><td>Learn local, spatially-shared feature detectors; nonlinearity enables complex function approximation</td></tr>
+<tr><td>Pooling (max/average)</td><td>Downsample feature maps, add translation invariance, reduce computation</td></tr>
+<tr><td>Batch normalization</td><td>Stabilize/accelerate training by normalizing layer activations</td></tr>
+<tr><td>Skip/residual connections</td><td>Ease optimization of very deep networks by allowing gradients to flow directly (ResNet)</td></tr>
+</table>
+<h4>Supervised vs. unsupervised feature learning (per the slide's diagram)</h4>
+<p>The supervised path uses labeled data (e.g., "penguin," "elephant," "kangaroo") to directly optimize features for classification accuracy via backpropagation. The unsupervised path learns features (e.g., via autoencoders) purely from the structure of unlabeled image data, without needing labels — useful when labeled data is scarce.</p>
+<h4>Advantages and limitations (as flagged in the slides)</h4>
+<ul>
+<li><b>Advantages</b>: learned features often outperform hand-crafted ones (Sobel, Harris, fixed texture filters) on complex tasks; end-to-end optimization; strong performance with sufficient labeled data.</li>
+<li><b>Limitations</b>: requires large labeled datasets; computationally expensive to train; less interpretable ("black box") than classical algorithmic pipelines covered in Sections 3–9; can fail unpredictably on out-of-distribution inputs (e.g., a coastline photo under lighting conditions never seen in training).</li>
+</ul>
+<div class="analogy"><b>Landscape analogy:</b> A classical pipeline for classifying "coastline vs. mountain vs. desert" photos might hand-engineer features: edge density (Sobel), color histograms, texture statistics. A CNN instead learns its own filters directly from thousands of labeled examples — its early layers might independently discover edge-detector-like filters (much like Sobel) purely from data, then combine them in deeper layers into detectors for "wave texture" or "cliff silhouette" without anyone explicitly programming those concepts.</div>
+</div>
+
+<div class="qbank">
+<div class="qtabs">
+  <div class="qtab active-easy" onclick="showQ('dnn','easy')">Easy</div>
+  <div class="qtab" onclick="showQ('dnn','medium')">Medium</div>
+  <div class="qtab" onclick="showQ('dnn','hard')">Hard</div>
+</div>
+<div class="qgroup show" id="dnn-easy">
+<div class="question"><span class="qlabel easy">EASY</span>
+<p>What is the main structural similarity between a classical convolution kernel (e.g., Sobel) and a CNN's convolutional filter?</p>
+<details><summary>Reveal answer</summary><div class="answer">Both slide a small weighted kernel across the image computing local weighted sums (convolution/correlation) — the mathematical operation is identical. The difference is that Sobel's weights are hand-designed/fixed, while a CNN filter's weights are learned from data via backpropagation.</div></details>
+</div>
+<div class="question"><span class="qlabel easy">EASY</span>
+<p>Name one advantage and one limitation of deep-learning-based image processing versus classical algorithmic methods.</p>
+<details><summary>Reveal answer</summary><div class="answer">Advantage: can learn features better suited to complex tasks than any fixed hand-crafted filter, often achieving higher accuracy. Limitation: needs large amounts of labeled training data and compute, and is less interpretable than a classical pipeline with well-understood mathematical steps.</div></details>
+</div>
+</div>
+<div class="qgroup" id="dnn-medium">
+<div class="question"><span class="qlabel medium">MEDIUM</span>
+<p>Why does stacking multiple convolutional layers (rather than using one very large kernel) tend to produce a richer feature hierarchy, per the slide's progression from "strokes → parts → whole shapes"?</p>
+<details><summary>Reveal answer</summary><div class="answer">Each layer's output feature map is a function of the previous layer's already-extracted features, not raw pixels — so a filter in layer 2 combining outputs from several layer-1 edge detectors can represent a more complex pattern (e.g., a corner or curve) than any single-layer linear filter could, without needing an enormous kernel. Additionally, stacking small kernels (e.g., two 3×3 layers) achieves a larger effective receptive field with fewer parameters and more nonlinearities (one ReLU per layer) than a single large kernel, increasing representational power for the same or lower parameter cost.</div></details>
+</div>
+<div class="question"><span class="qlabel medium">MEDIUM</span>
+<p>Relate max-pooling to a concept from Section 5 (edges/corners): why might a max-pooling layer provide some robustness to small translations of a corner-like feature (e.g., the tip of a rocky outcrop) in the input image?</p>
+<details><summary>Reveal answer</summary><div class="answer">Max-pooling takes the maximum activation within a local window (e.g., 2×2) and discards the exact position within that window. If a strong "corner detector" filter's peak response shifts by a pixel or two due to a small translation of the actual corner in the image, the max-pooling window is likely to still capture that peak activation somewhere within its receptive field, so the pooled output stays similar — providing local translation invariance, conceptually analogous to how Harris corner detection's non-max suppression already tolerates a "cluster" of high-response pixels near a true corner rather than requiring pixel-exact alignment.</div></details>
+</div>
+</div>
+<div class="qgroup" id="dnn-hard">
+<div class="question"><span class="qlabel hard">HARD</span>
+<p>Contrast a classical segmentation pipeline (e.g., Otsu thresholding or graph-cut, Section 6) with a CNN-based semantic segmentation approach in terms of: (a) what "learning" happens where, (b) how each generalizes to new, unseen coastline images with different lighting/textures, and (c) computational cost tradeoffs at inference time.</p>
+<details><summary>Reveal answer</summary><div class="answer">
+(a) <i>Where learning happens</i>: Classical Otsu/graph-cut has no learned parameters at all — the threshold or graph weights are computed fresh from each individual image's own statistics (its histogram, or per-pixel similarity), so there's no "training" phase; the algorithm's assumptions (bimodality, local similarity) are hand-designed once and applied generically. A CNN-based segmenter (e.g., a U-Net) has millions of learned weights, fit during a training phase on a labeled dataset of many coastline images with ground-truth segment masks; at inference, those fixed learned weights are applied via a single forward pass.
+
+(b) <i>Generalization</i>: Otsu/graph-cut adapt automatically to each new image's own statistics (recomputing the threshold/graph per image), so they're somewhat robust to lighting shifts as long as the bimodality/similarity assumption still holds for that image — but they fail hard when that assumption breaks (e.g., overlapping sea/rock intensity distributions in overcast light). A CNN generalizes well to new images similar in distribution to its training data (it has implicitly learned invariances to lighting/texture variation seen during training) but can fail unpredictably on genuinely out-of-distribution inputs (e.g., a coastline photographed in fog if no foggy images were in the training set) since it has no explicit fallback mathematical assumption to rely on.
+
+(c) <i>Computational cost</i>: Otsu is extremely cheap at "inference" (O(image size) for histogram + O(256) threshold search); graph-cut is more expensive (max-flow/min-cut algorithms, or eigendecomposition for normalized cut, on a graph with as many nodes as pixels). A CNN's inference cost is dominated by many convolution operations across all layers (can be substantial, though highly parallelizable on GPUs) — but crucially, all of the CNN's "intelligence" was paid for upfront during a (much more expensive) training phase, which the classical per-image methods never require.
+</div></details>
+</div>
+</div>
+</div>
+</section>
+
+<div class="footer-note">CS-663 · Fundamentals of Digital Image Processing — Study Guide generated from lecture slides. Content limited to technical topics; all logistics/policy slides excluded.</div>
+
+</div>
+
+<div class="progress-badge" id="progressBadge">Click "Reveal answer" to check your work after attempting each question.</div>
+
+<script>
+function showQ(section, level){
+  const groups = document.querySelectorAll('#'+section+'-easy, #'+section+'-medium, #'+section+'-hard');
+  groups.forEach(g => g.classList.remove('show'));
+  document.getElementById(section+'-'+level).classList.add('show');
+
+  const tabs = document.querySelectorAll('[onclick^="showQ(\'' + section + '\'"]');
+  tabs.forEach(t => t.classList.remove('active-easy','active-medium','active-hard'));
+  event.target.classList.add('active-' + level);
+}
+</script>
+
+</body>
+</html>
