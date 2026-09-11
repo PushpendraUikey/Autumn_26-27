@@ -41,7 +41,19 @@ def compute_tensor_components(Ix: np.ndarray, Iy: np.ndarray) -> tuple[np.ndarra
     
     return Ixx, Iyy, Ixy
 
-def detect_corners_and_edges(image: np.ndarray, pre_smoothing_sigma: float = 1.0):
+def aggregate_tensor_components(Ixx: np.ndarray, Iyy: np.ndarray, Ixy: np.ndarray, window_sigma: float = 1.5) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """
+    Aggregates the raw tensor components over a Gaussian-weighted local window 
+    to form a full-rank Structure Tensor at each pixel.
+    """
+    # Reuse the Gaussian smoothing function to apply the weighted window
+    Sxx = apply_gaussian_smoothing(Ixx, sigma=window_sigma)
+    Syy = apply_gaussian_smoothing(Iyy, sigma=window_sigma)
+    Sxy = apply_gaussian_smoothing(Ixy, sigma=window_sigma)
+    
+    return Sxx, Syy, Sxy
+
+def detect_corners_and_edges(image: np.ndarray, pre_smoothing_sigma: float = 1.0, window_sigma: float = 1.5):
     if image.ndim > 2:
         raise ValueError("Feature detection requires a 2D grayscale image.")
         
@@ -51,7 +63,10 @@ def detect_corners_and_edges(image: np.ndarray, pre_smoothing_sigma: float = 1.0
     # --- Stage 2: Gradients ---
     Ix, Iy = compute_image_gradients(smoothed_image)
     
-    # --- Stage 3: Structure Tensor Components ---
+    # --- Stage 3: Raw Structure Tensor Components ---
     Ixx, Iyy, Ixy = compute_tensor_components(Ix, Iy)
     
-    return Ixx, Iyy, Ixy
+    # --- Stage 4: Windowed Aggregation ---
+    Sxx, Syy, Sxy = aggregate_tensor_components(Ixx, Iyy, Ixy, window_sigma)
+    
+    return Sxx, Syy, Sxy
