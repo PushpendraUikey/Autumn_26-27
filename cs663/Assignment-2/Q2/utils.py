@@ -12,59 +12,9 @@ def load_image(image_path: str, as_gray: bool = False) -> np.ndarray:
     arr = np.asarray(img, dtype=np.float64) / 255.0
     return arr
 
-def save_sharpening_comparison(orig: np.ndarray, sharp1: np.ndarray, sharp2: np.ndarray, 
-                               title1: str, title2: str, save_path: str):
-    """
-    Saves the original image and two sharpened versions on the exact same colorscale.
-    """
-    is_rgb = orig.ndim == 3
-    vmin, vmax = (0.0, 1.0) if is_rgb else (orig.min(), orig.max())
-    
-    fig, axes = plt.subplots(1, 3, figsize=(15, 5))
-    images = [orig, sharp1, sharp2]
-    titles = ["Original Image", title1, title2]
-    
-    for ax, img, title in zip(axes, images, titles):
-        if is_rgb:
-            im = ax.imshow(img)
-        else:
-            im = ax.imshow(img, cmap=plt.get_cmap('gray', 256), vmin=vmin, vmax=vmax)
-            
-        ax.set_title(title)
-        ax.axis("off")
-        
-        # Colorbars are required for grayscale images
-        if not is_rgb:
-            cbar = fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
-            cbar.ax.tick_params(labelsize=8)
-        
-    plt.tight_layout()
-    plt.savefig(save_path, bbox_inches='tight', dpi=300)
-    plt.close()
-
-def save_difference_heatmap(diff: np.ndarray, title: str, mse: float, save_path: str):
-    """
-    Saves an absolute difference matrix using a high-contrast heatmap.
-    """
-    # If RGB difference, take the mean across channels for a 2D heatmap
-    if diff.ndim == 3:
-        diff = np.mean(diff, axis=-1)
-
-    plt.figure(figsize=(6, 5))
-    im = plt.imshow(diff, cmap='hot')
-    plt.title(f"{title}\nMSE: {mse:.6f}")
-    plt.axis("off")
-    cbar = plt.colorbar(im, fraction=0.046, pad=0.04)
-    cbar.ax.tick_params(labelsize=8)
-    plt.tight_layout()
-    plt.savefig(save_path, bbox_inches='tight', dpi=300)
-    plt.close()
-
-
 def resize_image(img: np.ndarray, factor: float = None, size: tuple = None) -> np.ndarray:
     """
     Resizes a floating-point image array.
-    Provide either a scaling 'factor' (e.g., 0.2 for 1/5th) or an exact (width, height) 'size'.
     """
     # Convert back to PIL Image temporarily for high-quality resampling
     pil_img = Image.fromarray(np.uint8(img * 255))
@@ -91,11 +41,14 @@ def save_ncc_grid(ncc_r: np.ndarray, ncc_g: np.ndarray, ncc_b: np.ndarray,
               f"Blue Channel ({template_size})"]
     
     for ax, channel_data, title in zip(axes, channels, titles):
-        im = ax.imshow(channel_data, cmap='viridis')
+        im = ax.imshow(channel_data, cmap='viridis', vmin=-1.0, vmax=1.0)
         ax.set_title(title)
         ax.axis("off")
         cbar = fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
         cbar.ax.tick_params(labelsize=8)
+        idx = np.unravel_index(np.argmax(channel_data), channel_data.shape)
+        peak_val = channel_data[idx]
+        ax.plot(idx[1], idx[0], marker='+', color='red', markersize=18, markeredgewidth=2)
         
     plt.tight_layout()
     plt.savefig(save_path, bbox_inches='tight')
