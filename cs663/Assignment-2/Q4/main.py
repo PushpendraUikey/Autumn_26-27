@@ -1,6 +1,8 @@
 import numpy as np
 from scipy.ndimage import convolve
 from scipy.ndimage import maximum_filter, minimum_filter
+import utils
+import os
 
 def apply_gaussian_smoothing(image: np.ndarray, sigma: float = 1.0) -> np.ndarray:
     """
@@ -106,43 +108,113 @@ def detect_corners_and_edges(image: np.ndarray, pre_smoothing_sigma: float = 1.0
     return lambda_1, lambda_2, shi_tomasi, harris
 
 
-def extract_features_nms(score_map: np.ndarray, threshold: float, mode: str = 'corner', window_size: int = 5) -> tuple[np.ndarray, np.ndarray]:
+def extract_features_nms(score_map: np.ndarray, threshold: float, mode: str = 'corner', window_size: int = 5):
     """
-    Applies Non-Maximum Suppression (NMS) using a local window and a threshold 
-    to extract discrete feature coordinates.
+    Applies Non-Maximum Suppression (NMS) using a local window and a threshold.
+    Returns the coordinates, the continuous NMS map, and the binary mask map.
     """
     if mode == 'corner':
-        # local maxima in the neighborhood
         local_extreme = maximum_filter(score_map, size=window_size)
-        # Keep pixels that are both the local maximum AND strictly greater than the threshold
         mask = (score_map == local_extreme) & (score_map > threshold)
-        
     elif mode == 'edge':
-        # For Harris edges, we look for extreme negative values (local minima)
         local_extreme = minimum_filter(score_map, size=window_size)
-        # Keep pixels that are the local minimum AND strictly less than -threshold
         mask = (score_map == local_extreme) & (score_map < -threshold)
-        
     else:
         raise ValueError("Mode must be 'corner' or 'edge'.")
         
-    # Return the discrete (y, x) coordinates of the features
     y, x = np.where(mask)
-    return y, x
+    
+    # Generate continuous NMS map (preserves score at peaks, 0 elsewhere)
+    nms_map = np.where(local_extreme == score_map, score_map, 0)
+    
+    # Generate binary map (1.0 at feature locations, 0.0 elsewhere)
+    bin_map = mask.astype(np.float64)
+    
+    return y, x, nms_map, bin_map
 
 def extract_all_features(shi_tomasi: np.ndarray, harris: np.ndarray, 
                          t_st: float, t_harris_c: float, t_harris_e: float, 
                          nms_window: int = 5):
     """
-    Runs the thresholding and NMS extraction for all three feature categories.
+    Runs thresholding and NMS for Shi-Tomasi corners, Harris corners, and Harris edges.
     """
-    # 1. Shi-Tomasi Corners
-    st_corners_y, st_corners_x = extract_features_nms(shi_tomasi, t_st, mode='corner', window_size=nms_window)
+    st_data = extract_features_nms(shi_tomasi, t_st, mode='corner', window_size=nms_window)
+    h_corner_data = extract_features_nms(harris, t_harris_c, mode='corner', window_size=nms_window)
+    h_edge_data = extract_features_nms(harris, t_harris_e, mode='edge', window_size=nms_window)
     
-    # 2. Harris Corners
-    h_corners_y, h_corners_x = extract_features_nms(harris, t_harris_c, mode='corner', window_size=nms_window)
+    return st_data, h_corner_data, h_edge_data
+
+def process_and_visualize_features(img_name: str, base_path: str, output_path: str, params: dict):
+    img_path = os.path.join(base_path, img_name)
     
-    # 3. Harris Edges (Note the 'edge' mode handles the negative thresholding internally)
-    h_edges_y, h_edges_x = extract_features_nms(harris, t_harris_e, mode='edge', window_size=nms_window)
+    # 1. Load BOTH RGB (canvas) and Grayscale (math) versions
+    rgb_image = utils.load_image(img_path, as_gray=False)
+    gray_image = utils.load_image(img_path, as_gray=True)
     
-    return (st_corners_y, st_corners_x), (h_corners_y, h_corners_x), (h_edges_y, h_edges_x)
+    pre_sig = params.get("pre_sigma", 1.0)
+    win_sig = params.get("window_sigma", 1.5)
+    k = params.get("k", 0.04)
+    t_st = params["t_st"]
+    t_hc = params["t_harris_corner"]
+    t_he = params["t_harris_edge"]
+    nms_win = params.get("nms_window", 5)
+    
+    # Stages 1-6: Compute Maps (on Grayscale)
+    l1, l2, shi_tomasi, harris = detect_corners_and_edges(gray_image, pre_sig, win_sig, k)
+    
+    # Stages 7-9: Extract Features
+    st_data, hc_data, he_data = extract_all_features(
+        shi_tomasi, harris, t_st, t_hc, t_he, nms_window=nms_win
+    )
+    
+    st_y, st_x, st_nms, st_bin = st_data
+    h_y, h_x, hc_nms, hc_bin = hc_data
+    he_y, he_x, he_nms, he_bin = he_data
+    
+    # Stage 10: Save all 7 specific figures per image
+    base_save_name = os.path.join(output_path, f"Q4_{img_name.split('.')[0]}")
+    utils.save_q4_figures(rgb_image, gray_image, l1, l2, harris, 
+                          st_nms, hc_nms, st_bin, hc_bin, 
+                          he_nms, he_bin, 
+                          st_y, st_x, h_y, h_x, he_y, he_x, base_save_name)
+    print(f"  Finished extracting and plotting features for: {img_name}")
+
+if __name__ == "__main__":
+    base_path = "../data/corner/"
+    output_path = "./output/"
+    os.makedirs(output_path, exist_ok=True)
+    
+    # Structure Tensor values scale significantly with image contrast and texture.
+    feature_params = {
+        "nandadevi.png": {
+            "pre_sigma": 1.5,          
+            "window_sigma": 2.0,       
+            "k": 0.04, 
+            "nms_window": 5,
+            "t_st": 0.05,              
+            "t_harris_corner": 0.01,  
+            "t_harris_edge": 0.02     
+        },
+        "paithaniCorner.png": {
+            "pre_sigma": 1.0,          
+            "window_sigma": 1.5,       
+            "k": 0.04, 
+            "nms_window": 5,
+            "t_st": 0.02,              
+            "t_harris_corner": 0.005,  
+            "t_harris_edge": 0.01     
+        },
+        "warli.png": {
+            "pre_sigma": 0.5,          
+            "window_sigma": 1.0,       
+            "k": 0.04, 
+            "nms_window": 3,           
+            "t_st": 0.1,               
+            "t_harris_corner": 0.05,  
+            "t_harris_edge": 0.05     
+        }
+    }
+    
+    for img_name, params in feature_params.items():
+        print(f"Processing Q4 Structure Tensor pipeline for: {img_name}")
+        process_and_visualize_features(img_name, base_path, output_path, params)
