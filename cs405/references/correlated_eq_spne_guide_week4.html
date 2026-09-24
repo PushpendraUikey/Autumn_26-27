@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Correlated Equilibrium, PIEFG & Subgame Perfection — Week 4 Study Module</title>
+<script>
+  MathJax = { tex: { inlineMath: [['\\(','\\)']], displayMath: [['\\[','\\]']] } };
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.min.js"></script>
+<style>
+  :root{
+    --navy:#1e3a6d; --blue:#3b6fd4; --lightblue:#eaf1fc; --pink:#c0264d;
+    --green:#1f7a4d; --bg:#f7f9fc; --card:#ffffff; --text:#1c2430; --muted:#5b6b82;
+    --code:#0d3b66;
+  }
+  *{box-sizing:border-box;}
+  body{
+    font-family:'Georgia','Times New Roman',serif;
+    background:var(--bg); color:var(--text); margin:0; line-height:1.6;
+  }
+  header{
+    background:linear-gradient(135deg,var(--navy),var(--blue));
+    color:white; padding:2rem 1.5rem 1.5rem;
+  }
+  header h1{margin:0 0 .3rem; font-size:1.8rem;}
+  header p{margin:0; opacity:.9; font-family:Arial,sans-serif; font-size:.95rem;}
+  nav{
+    position:sticky; top:0; z-index:50; background:var(--navy);
+    display:flex; flex-wrap:wrap; font-family:Arial,sans-serif; font-size:.85rem;
+  }
+  nav a{
+    color:#cfe0ff; text-decoration:none; padding:.7rem .9rem; flex:1; text-align:center;
+    border-right:1px solid rgba(255,255,255,.15);
+  }
+  nav a:hover{background:var(--blue); color:white;}
+  main{max-width:920px; margin:0 auto; padding:1.5rem;}
+  section{margin-bottom:2.5rem;}
+  h2{
+    color:var(--navy); border-bottom:3px solid var(--blue); padding-bottom:.3rem;
+    font-size:1.5rem; margin-top:0;
+  }
+  h3{color:var(--pink); font-size:1.15rem; margin-top:1.8rem;}
+  .card{
+    background:var(--card); border:1px solid #dde5f0; border-radius:10px;
+    padding:1.1rem 1.3rem; margin:1rem 0; box-shadow:0 1px 3px rgba(0,0,0,.04);
+  }
+  .def{background:var(--lightblue); border-left:5px solid var(--blue);}
+  .thm{background:#fdf3f6; border-left:5px solid var(--pink);}
+  .analogy{
+    background:#eef6ff; border-left:5px solid #2f7fd0; font-family:'SFMono-Regular',Consolas,monospace,Arial,sans-serif;
+    font-size:.92rem;
+  }
+  .analogy b{color:#1a5aa8;}
+  .proof{background:#eef7f0; border-left:5px solid var(--green);}
+  .intuition{
+    background:#f0f0ff; border-left:5px solid #6a4fc9; font-family:Arial,sans-serif;
+    font-size:.93rem;
+  }
+  table{border-collapse:collapse; margin:1rem auto; font-family:Arial,sans-serif;}
+  td,th{border:1px solid #b9c6dc; padding:.5rem .9rem; text-align:center;}
+  th{background:var(--lightblue);}
+  .tag{
+    display:inline-block; font-family:Arial,sans-serif; font-size:.7rem; font-weight:bold;
+    padding:.15rem .55rem; border-radius:12px; margin-left:.4rem; vertical-align:middle;
+  }
+  .easy{background:#dff5e3; color:#1f7a4d;}
+  .medium{background:#fff1cf; color:#8a6300;}
+  .hard{background:#fbdede; color:#a3213f;}
+  details{
+    background:var(--card); border:1px solid #dde5f0; border-radius:8px;
+    padding:.7rem 1rem; margin-top:.6rem;
+  }
+  summary{
+    cursor:pointer; font-weight:bold; color:var(--blue); font-family:Arial,sans-serif;
+  }
+  summary:hover{color:var(--pink);}
+  .problem{border:1px solid #cddcf2; border-radius:10px; padding:1rem 1.3rem; margin:1.2rem 0; background:#fbfcff;}
+  code{background:#eef1f7; padding:.1rem .35rem; border-radius:4px; font-size:.9em; color:var(--code);}
+  pre{background:#0d1b2a; color:#d6e6ff; padding:1rem; border-radius:8px; overflow-x:auto; font-size:.85rem; line-height:1.5;}
+  pre code{background:none; color:inherit; padding:0;}
+  footer{text-align:center; font-family:Arial,sans-serif; color:var(--muted); font-size:.8rem; padding:2rem 0;}
+
+  /* game tree */
+  .tree{font-family:'SFMono-Regular',Consolas,monospace; background:#f4f7fb; border:1px solid #dde5f0; border-radius:8px; padding:1rem 1.3rem; overflow-x:auto; white-space:pre; font-size:.85rem; line-height:1.7;}
+  .venn{font-family:Arial,sans-serif; text-align:center; font-size:.9rem; margin:1rem 0;}
+  .venn-ring{display:inline-block; padding:.6rem 1.1rem; border:2px solid var(--blue); border-radius:50%; margin:0 -14px; background:rgba(59,111,212,0.04);}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Correlated Equilibrium, PIEFG &amp; Subgame Perfection</h1>
+  <p>CS 6001 — Game Theory and Algorithmic Mechanism Design · Week 4 Study Module</p>
+</header>
+
+<nav>
+  <a href="#concepts">1. Core Concepts</a>
+  <a href="#algorithms">2. Algorithms, Math &amp; Intuition</a>
+  <a href="#checks">3. Concept Checks</a>
+  <a href="#problems">4. Practice Problems</a>
+  <a href="#solutions">5. Solutions</a>
+</nav>
+
+<main>
+
+<!-- ============================================================ -->
+<section id="concepts">
+<h2>1. Core Concepts &amp; Algorithmic Analogies</h2>
+
+<h3>1.1 Correlated Strategy &amp; Correlated Equilibrium</h3>
+<div class="card def">
+<b>Correlated strategy.</b> A mapping \(\pi: S_1\times S_2\times\cdots\times S_n \to [0,1]\) with \(\sum_{s\in S}\pi(s)=1\) — a single joint probability distribution over <i>strategy profiles</i> (not a product of independent per-player distributions).
+</div>
+<div class="card def">
+<b>Correlated equilibrium (CE).</b> A correlated strategy \(\pi\) such that for every player \(i\) and every pair \(s_i, s_i' \in S_i\):
+\[
+\sum_{s_{-i}\in S_{-i}} \pi(s_i,s_{-i})\cdot u_i(s_i,s_{-i}) \ \ge\ \sum_{s_{-i}\in S_{-i}} \pi(s_i,s_{-i})\cdot u_i(s_i',s_{-i})
+\]
+i.e., <i>given the recommendation \(s_i\)</i>, no deviation to \(s_i'\) is profitable, provided every other player follows their own recommendation. \(\pi\) itself is <b>common knowledge</b>.
+</div>
+<div class="card analogy">
+<b>CS analogy:</b> Think of the <b>mediator</b> as a <i>distributed-systems arbiter</i ​or <i>lock manager</i> in a concurrency protocol. A mixed strategy (MSNE) is like each thread independently rolling its own private random number generator with no shared seed — the threads' random choices are statistically <i>independent</i>. A correlated strategy is like a single shared random seed (or a distributed consensus / two-phase-commit coordinator) that hands each thread a <i>correlated</i> instruction drawn from one joint lottery — e.g., "thread A: acquire lock; thread B: wait." Because it's one shared draw, the recommendations can be perfectly anti-correlated (never collide) in a way that two independent RNGs never could. The traffic light is exactly this: it doesn't tell each driver to "go with probability \(p\)" independently — it draws <i>one</i> global light-state and both drivers observe consistent, coordinated instructions derived from it.
+</div>
+
+<h3>1.2 Why We Need a Mediator</h3>
+<div class="card def">
+Three motivations from the slides: (1) an <b>alternative explanation of rationality</b> — players might really be following external signals rather than internally randomizing; (2) <b>utility can improve</b> for all players versus the best MSNE; (3) <b>computational tractability</b> — CE is dramatically easier to compute than MSNE.
+</div>
+<div class="card analogy">
+<b>CS analogy:</b> This is the game-theoretic version of moving from <i>local, uncoordinated optimization</i> (each node in a distributed system greedily optimizing with only local information, akin to gradient descent with no message passing) to a <i>centralized scheduler</i> that has global visibility and can hand out a jointly optimal — or at least jointly consistent — assignment. The scheduler can achieve outcomes (like avoiding a collision deterministically) that no amount of independent local randomization can replicate.
+</div>
+
+<h3>1.3 Worked Example: Busy Crossroad</h3>
+<div class="card">
+<table>
+<tr><th></th><th>Wait</th><th>Go</th></tr>
+<tr><th>Wait</th><td>0, 0</td><td>1, 2</td></tr>
+<tr><th>Go</th><td>2, 1</td><td>-10, -10</td></tr>
+</table>
+<p>Nash solutions: (Wait, Go), (Go, Wait), and a fully-mixed MSNE. A natural mediator plan is \(\pi(W,G)=\pi(W,W)=\pi(G,W)=\tfrac13\), \(\pi(G,G)=0\) — the light never tells both to go, and gives each car an equal share of the two "someone goes" outcomes plus the "both wait" outcome. (We verify in §2 whether this is a genuine CE.)</p>
+</div>
+
+<h3>1.4 The Equilibrium Hierarchy</h3>
+<div class="card def">
+\[
+\text{SDSE} \subseteq \text{WDSE} \subseteq \text{PSNE} \subseteq \text{MSNE} \subseteq \text{CE}
+\]
+(SDSE = strictly-dominant-strategy equilibrium, WDSE = weakly-dominant-strategy equilibrium.) Each notion <i>relaxes</i> the requirements of the one before it, so the set of games possessing that kind of equilibrium only grows as you move right.
+</div>
+<div class="venn">
+<span class="venn-ring">SDSE <span class="venn-ring">WDSE <span class="venn-ring">PSNE <span class="venn-ring">MSNE <span class="venn-ring">CE</span></span></span></span></span>
+</div>
+<div class="card analogy">
+<b>CS analogy:</b> This is exactly a <b>class hierarchy under inheritance / interface refinement</b>. SDSE is like a <code>final</code> class with the strongest guarantees (a dominant strategy — "this action beats everything, no matter what," analogous to a function whose return value is provably correct regardless of input). WDSE relaxes "beats" to "at least ties." PSNE relaxes further to "no unilateral deviation helps, but only relative to what others are actually doing" (a local-optimum guarantee, like a solution stable under a specific fixed test suite rather than all inputs). MSNE further relaxes by allowing randomized responses (like allowing probabilistic/approximate algorithms where deterministic ones might not terminate with a solution). CE is the widest interface: it only requires stability with respect to a shared, correlated recommendation, permitting all the above as special cases (an independent-product distribution — an MSNE — is itself a valid, if degenerate, correlated strategy). Just as every <code>ArrayList</code> "is-a" <code>List</code>, every MSNE "is-a" CE (formally proved via \(\pi^*(s)=\prod_i \sigma_i^*(s_i)\) — the CE built by literally multiplying together everyone's independent mixed strategies).
+</div>
+
+<h3>1.5 Perfect Information Extensive Form Games (PIEFG)</h3>
+<div class="card def">
+A PIEFG is a tuple \(\langle N, A, H, X, P, (u_i)_{i\in N}\rangle\):
+<ul>
+<li>\(N\): players.</li>
+<li>\(A\): the universe of all possible actions.</li>
+<li>\(H\): the set of all <b>histories</b> (action sequences) — closed under taking prefixes, starting from \(\emptyset\). \(Z\subseteq H\) is the subset of <b>terminal</b> histories (no legal continuation).</li>
+<li>\(X: H\setminus Z \to 2^A\): the action-set-selection function — legal actions at a non-terminal history.</li>
+<li>\(P: H\setminus Z \to N\): the player function — whose turn it is at that history.</li>
+<li>\(u_i: Z \to \mathbb{R}\): payoff of player \(i\), defined only at terminal histories.</li>
+</ul>
+</div>
+<div class="card analogy">
+<b>CS analogy:</b> \(H\) is exactly the set of all <b>root-to-node paths in a rooted tree</b> (or, more precisely, in a DAG if you think of it abstractly, though PIEFGs are trees) — closed under prefixes is just "every ancestor of a node is also a valid node." \(Z\) is the set of <b>leaf nodes</b>. \(X(h)\) is the <b>out-edges</b> available at internal node \(h\); \(P(h)\) is metadata tagging <i>which process/thread</i> owns the decision at that node (like a turn-based state machine). Computing anything about the game — its value, its equilibrium — means a <b>tree traversal</b>: exactly the kind of recursive walk you'd write to evaluate an expression tree, minimax a game tree, or run a recursive-descent parser over an abstract syntax tree. A <b>strategy</b> \(s_i \in S_i = \times_{\{h: P(h)=i\}} X(h)\) is a <i>complete contingency plan</i> — precisely a lookup table (or a pure function) mapping every node you might ever own to an action, even nodes that will provably never be visited given your own earlier choices. This is identical to a <b>strategy pattern</b> object in software design, or a fully-specified <code>switch</code> statement covering every case even unreachable ones — dead code that still has to be "compiled in" because the type system (the strategy-space definition) demands totality.
+</div>
+
+<h3>1.6 SPNE vs. Plain PSNE on the NFG Conversion</h3>
+<div class="card thm">
+<b>Observation.</b> Converting a PIEFG to its induced Normal Form Game (every full contingency plan becomes one row/column) and finding a PSNE there can produce <b>non-credible threats</b>: an equilibrium strategy might specify an action at some off-equilibrium-path node that the player would never actually rationally take if that node were really reached.
+</div>
+<div class="card def">
+<b>Subgame:</b> the restriction of \(G\) to the descendants of some history \(h\) — i.e., the "sub-tree" rooted at \(h\), treated as its own game.<br>
+<b>Subgame Perfect Nash Equilibrium (SPNE):</b> a strategy profile \(s\) such that its restriction to <i>every</i> subgame \(G'\) of \(G\) is itself a PSNE of \(G'\).
+</div>
+<div class="card analogy">
+<b>CS analogy:</b> A plain PSNE on the flattened NFG is like <b>unit-testing only the program's single top-level entry point / one end-to-end test case</b> — it checks that the overall input/output behavior along one path is stable, but it says nothing about whether the code inside every unreached <code>if</code>-branch is <i>actually correct</i>, because those branches never execute during that one test. SPNE is the game-theoretic analogue of <b>formal verification of every reachable state</b>, or exhaustively unit-testing every function <i>in isolation</i>, including ones your top-level test never calls: you require that the "function" (strategy) installed at every single subgame — every node, reached or not — is independently optimal <i>as if execution started right there</i>. This is exactly why non-credible threats slip past plain PSNE: a "buggy" or "irrational" branch that's dead code under the main equilibrium path doesn't get caught by an NFG-level PSNE check, the same way a bug in an unreachable branch doesn't fail your top-level integration test but would fail a targeted unit test of that branch. This is precisely why the NFG representation, though formally equivalent in terms of listed strategies, is a poor lens for sequential games: it throws away the tree's structural information about <i>when</i> and <i>in response to what</i> an action is chosen, which is exactly the information backward induction needs.
+</div>
+
+</section>
+
+<!-- ============================================================ -->
+<section id="algorithms">
+<h2>2. Algorithms, Math &amp; Intuition</h2>
+
+<h3>2.1 Computing a Correlated Equilibrium — Feasibility LP</h3>
+<div class="card def">
+The CE conditions
+\[
+\sum_{s_{-i}\in S_{-i}} \pi(s_i,s_{-i})u_i(s_i,s_{-i}) \ge \sum_{s_{-i}\in S_{-i}} \pi(s_i,s_{-i})u_i(s_i',s_{-i}), \quad \forall s_i,s_i'\in S_i,\ \forall i\in N
+\]
+are <b>linear</b> in the unknowns \(\pi(s)\). Together with \(\pi(s)\ge0\) and \(\sum_{s\in S}\pi(s)=1\), this is a plain <b>feasibility linear program</b> — no support-guessing required.
+</div>
+<div class="card thm">
+<b>Complexity comparison</b> (assuming \(|S_i|=m\ \forall i\), \(n\) players):
+<ul>
+<li><b>MSNE:</b> total support profiles to search \(= O(2^{mn})\) — exponential in both \(m\) and \(n\).</li>
+<li><b>CE:</b> total inequalities \(= O(n\cdot m^2)\) — polynomial. (There are \(m^n\) variables \(\pi(s)\), but only \(O(nm^2)\) <i>constraints</i>, and any standard LP solver runs in time polynomial in the number of variables and constraints.)</li>
+</ul>
+Take logs of \(2^{mn}\) versus \(nm^2\) to see the gap explicitly: the MSNE search space is exponential <i>in the exponent</i> (\(mn\) itself is the exponent of 2), while the CE program's size is polynomial in \(m,n\).
+</div>
+<div class="card analogy">
+<b>CS analogy:</b> MSNE-finding is like <b>brute-force backtracking search over an exponentially large combinatorial space</b> (think: brute-force SAT solving by enumerating every assignment, or exhaustively trying every subset of a power set). CE-finding is like recognizing the same problem can be phrased as an <b>LP relaxation</b> that a polynomial-time algorithm (interior point / simplex in the worst-tractable cases) can solve directly — the same phenomenon as when a seemingly combinatorial problem (e.g., max-flow, matching) turns out to have an LP formulation solvable in poly-time, versus a naively-combinatorial sibling problem that's NP-hard. The mediator doesn't just change the <i>economics</i> of the game; it changes the <i>computational complexity class</i> of finding a stable outcome — from an exponential support-enumeration problem to a polynomial-size LP.
+</div>
+
+<h3>2.2 Backward Induction — Reading It As Recursive DFS / DP</h3>
+<div class="card def">
+<b>Algorithm (Backward Induction).</b>
+</div>
+<pre><code>function BACK_IND(history h):
+    if h in Z:                          # base case: leaf node
+        return u(h), None               # (payoff vector, no action)
+
+    best_util[P(h)] = -infinity
+    for a in X(h):                      # try every legal action/child
+        util_at_child = BACK_IND(h + a)          # recurse into subtree
+        if util_at_child[P(h)] > best_util[P(h)]:
+            best_util[P(h)]   = util_at_child[P(h)]
+            best_action[P(h)] = a
+    return best_util, best_action</code></pre>
+<div class="card analogy">
+<b>CS analogy:</b> This is <b>textbook post-order DFS with memoization</b> — structurally identical to:
+<ul>
+<li>the <b>minimax</b> algorithm for two-player zero-sum game trees (chess engines, tic-tac-toe solvers) — the only difference is minimax alternates <i>maximize/minimize</i> for a zero-sum game, while <code>BACK_IND</code> generalizes to <i>each player maximizes their own payoff coordinate</i> at their own nodes (a straightforward multi-player generalization);</li>
+<li>evaluating an <b>expression tree bottom-up</b> — you can't know a node's value until you've recursively resolved all its children, exactly like evaluating <code>(2+3)*4</code> requires resolving the <code>+</code> subtree before the <code>*</code>;</li>
+<li><b>dynamic programming on a tree</b> (e.g., "maximum independent set in a tree" or "diameter of a tree") — the recursion computes and caches an optimal sub-solution at every node exactly once, and the parent combines children's optimal sub-solutions rather than recomputing from scratch. If you memoize on the history string \(h\) (useful when the same sub-position can be reached via multiple paths, e.g., in a DAG-shaped extensive game rather than a pure tree), this becomes literally the same code pattern as memoized recursive DP.</li>
+</ul>
+The function's return value <code>best_action[P(h)]</code> at every single node — not just the ones actually visited under the final equilibrium path — is exactly what builds a full SPNE strategy: a totally-defined lookup table, just like <code>1.5</code>'s "strategy = complete contingency plan" idea.
+</div>
+
+<h3>2.3 The Centipede Game — Backward Induction's Famous Paradox</h3>
+<div class="card def">
+A "centipede" alternates between two players; at each stage the current player can <b>defect (D)</b>, ending the game with a modest, unequal split, or <b>continue (A)</b>, risking the turn to the other player but growing the eventual pie. Backward induction, applied from the very last node backward, predicts <b>immediate defection at the first move</b>.
+</div>
+<div class="card proof">
+<b>Why backward induction forces immediate defection:</b> At the very last decision node, the mover strictly prefers <code>D</code> to <code>A</code> (by construction of the payoffs). Anticipating this, the second-to-last mover also strictly prefers <code>D</code> now rather than handing over a turn that will certainly end in the other player defecting one step later for a worse personal payoff. This unravels all the way back to move 1: the very first player defects immediately, "leaving money on the table" that <i>could</i> have been earned had both players cooperated for a while.
+</div>
+<div class="card intuition">
+<b>Empirical paradox:</b> Real subjects (except, notably, grandmaster-level strategic players) rarely defect at move 1 — most continue for several rounds. Claimed explanations: altruism/social preferences, bounded computational capacity, and differing beliefs about the opponent's rationality. The deeper critique of SPNE itself: subgame perfection's defining requirement talks about "what's optimal <i>if</i> this history is reached" — but the induction's own logic, applied one level up, may already show that history is <i>never reached</i> under the equilibrium, creating a strange self-referential tension between "optimal conditional on being there" and "provably never there."
+</div>
+<div class="card analogy">
+<b>CS analogy:</b> This is the game-theoretic sibling of <b>unbounded vs. depth-limited recursion / halting-condition brittleness</b>. A true backward-induction solver is like a program that must fully unwind a deep recursive call stack all the way to the base case before it can decide the very first move — exactly like requiring a full, exact minimax search to the leaves before making move 1 in a huge game tree (computationally infeasible for chess, hence real engines use depth-limited search with heuristic evaluation instead of "true" backward induction). Real human players behave more like <b>iterative deepening or depth-limited game-tree search with a heuristic cutoff</b> — they reason a few plies ahead, not all the way to the terminal leaf, which is exactly why they don't reproduce the fully-unwound recursive prediction. The Centipede paradox is a vivid illustration that an algorithm that is <i>correct in the limit</i> (true backward induction, given unbounded lookahead) can produce wildly different real-world behavior than a <i>resource-bounded approximation</i> of the same algorithm — a very familiar tension to anyone who has swapped an exact algorithm for a heuristic one under a time or memory budget.
+</div>
+
+</section>
+
+<!-- ============================================================ -->
+<section id="checks">
+<h2>3. Concept Check Questions</h2>
+<p style="font-family:Arial,sans-serif;color:var(--muted);font-size:.9rem;">Three short-answer / subjective questions per topic — meant to test conceptual understanding, not computation. Click any question to reveal a model answer. (Numeric examples are included where they help; several of these are deliberately open-ended, since the underlying idea doesn't reduce to a single number.)</p>
+
+<h3>3.1 Correlated Strategy &amp; Equilibrium</h3>
+<details><summary>Q1. Why is a correlated strategy strictly more general than a pair of independent mixed strategies?</summary>
+<div class="card">A mixed-strategy profile \((\sigma_1,\sigma_2)\) always induces a joint distribution over \(S_1\times S_2\) of the special <i>product form</i> \(\pi(s_1,s_2)=\sigma_1(s_1)\sigma_2(s_2)\) — the two players' realized actions are statistically <i>independent</i>. A correlated strategy \(\pi\) can be <i>any</i> joint distribution over \(S_1\times S_2\), including ones that are not expressible as a product of two marginals (e.g., perfectly anti-correlated distributions like \(\pi(W,G)=\pi(G,W)=\tfrac12\), \(\pi(W,W)=\pi(G,G)=0\)). So every mixed-strategy profile is a special case of a correlated strategy, but not vice versa — exactly why MSNE \(\subseteq\) CE in the hierarchy.</div>
+</details>
+<details><summary>Q2. In the Busy Crossroad game, why can the mediator's plan \(\pi(G,G)=0\) achieve something neither player's individual mixed strategy can replicate alone?</summary>
+<div class="card">Under any independent mixed strategy pair \((\sigma_1,\sigma_2)\) with both \(\sigma_1(\text{Go})>0\) and \(\sigma_2(\text{Go})>0\), the product-form joint distribution necessarily assigns \(\sigma_1(\text{Go})\cdot\sigma_2(\text{Go})>0\) probability to the catastrophic \((\text{Go},\text{Go})\) outcome — there is no way for two independent random draws to "know about" each other and avoid colliding. A correlated strategy is not constrained to the product form, so the mediator can directly zero out \(\pi(G,G)\) while keeping both marginal "sometimes go" probabilities positive — coordination that independent randomization can never achieve exactly.</div>
+</details>
+<details><summary>Q3. What does it mean for \(\pi\) to be "common knowledge," and why is this necessary for CE to make sense as an equilibrium concept?</summary>
+<div class="card">Common knowledge means every player knows the distribution \(\pi\) the mediator is using, knows that every other player knows it too, and so on ad infinitum. This matters because the CE incentive constraint is a statement about a player's <i>best response given their belief about what everyone else will do</i> — and that belief is derived directly from \(\pi\) conditioned on the player's own recommendation. If \(\pi\) weren't common knowledge, players couldn't correctly compute the conditional distribution over others' actions implied by their own signal, so "no profitable deviation" would not be a well-defined or verifiable condition — the whole equilibrium concept would be on shaky ground.</div>
+</details>
+
+<h3>3.2 The Equilibrium Hierarchy</h3>
+<details><summary>Q4. Why is every PSNE also an MSNE — what would go wrong if it weren't?</summary>
+<div class="card">A PSNE is literally a degenerate mixed strategy profile where each \(\sigma_i^*\) places probability 1 on a single pure action. The MSNE condition \(u_i(\sigma_i^*,\sigma_{-i}^*)\ge u_i(\sigma_i,\sigma_{-i}^*)\ \forall \sigma_i\in\Delta S_i\) reduces, by the "check-only-pure-deviations" theorem from Week 3, to exactly the PSNE condition \(u_i(s_i^*,s_{-i}^*)\ge u_i(s_i,s_{-i}^*)\ \forall s_i\in S_i\). So a PSNE automatically satisfies the (weaker, more general) MSNE definition. If it didn't, the hierarchy would be broken and MSNE would fail to be a genuine <i>generalization</i> of PSNE — which would undermine using MSNE existence (Nash 1951) as a fallback whenever PSNE fails to exist.</div>
+</details>
+<details><summary>Q5. Can a CE ever give strictly higher total welfare than the best MSNE of the same game? Use the Busy Crossroad numbers to argue your answer.</summary>
+<div class="card">Yes — this is exactly what Problem 3 in the practice set demonstrates. The CE \(\pi(W,G)=\pi(W,W)=\pi(G,W)=\tfrac13\) gives each player expected payoff 1 (total welfare 2) while assigning zero probability to the disastrous \((G,G)\) outcome. The fully-mixed MSNE, by contrast, must put positive independent probability on Go for both players (since it's a genuine mixed equilibrium), which forces a strictly positive \((\tfrac{2}{13})^2\approx2.4\%\) chance of the \(-10,-10\) collision, dragging expected welfare below what the CE achieves. This is a general phenomenon, not a coincidence of this example: because CE's feasible set is a strict superset of the (converted) MSNE outcomes, the best achievable welfare under CE is always weakly higher, and strictly higher whenever an MSNE's independence forces some bad joint outcome that a correlated device can rule out.</div>
+</details>
+<details><summary>Q6. What is the exact difference between the SDSE and WDSE defining inequalities, and why does SDSE \(\subseteq\) WDSE follow?</summary>
+<div class="card">SDSE requires a <i>strict</i> inequality against every other strategy: \(u_i(s_i^*,s_{-i}) > u_i(s_i,s_{-i})\ \forall s_i\ne s_i^*,\ \forall s_{-i}\). WDSE relaxes this to a non-strict (weak) inequality: \(u_i(s_i^*,s_{-i}) \ge u_i(s_i,s_{-i})\). Every strict inequality is trivially also a weak (non-strict) inequality, so any strategy satisfying the SDSE condition automatically satisfies the WDSE condition — hence SDSE \(\subseteq\) WDSE. The converse fails: a strategy that only weakly dominates (ties on some opponent action) satisfies WDSE but not the strictly-stronger SDSE requirement.</div>
+</details>
+
+<h3>3.3 Perfect Information Extensive Form Games (PIEFG)</h3>
+<details><summary>Q7. Why must \(H\) be closed under taking prefixes — what would break if it weren't?</summary>
+<div class="card">Prefix-closure encodes the basic fact that you cannot be at move 5 of a sequential game without having actually passed through moves 1–4 first — every node's entire ancestor chain must itself be a legitimate, reachable game state. If \(H\) allowed some history \(h\) without also containing all of \(h\)'s prefixes, the "tree" would effectively have dangling nodes with no valid path from the root — you could not actually walk to a state whose parent doesn't exist. This mirrors the basic well-formedness requirement for any tree/DAG data structure: every non-root node must have a valid path back to the root, or graph-traversal algorithms like backward induction have no well-defined way to recurse down to it in the first place.</div>
+</details>
+<details><summary>Q8. In the brother-sister chocolate game, why does Sister's strategy space have size \(2^3=8\) even though only one of the three branches is ever actually played?</summary>
+<div class="card">A strategy is a <i>complete contingency plan</i> — Sister must specify what she would do at <b>every</b> node where she gets to move, not just the one node that ends up being reached once Brother's actual choice is fixed. Since Sister has three distinct decision nodes (one following each of Brother's three possible proposals \(2\text{-}0\), \(1\text{-}1\), \(0\text{-}2\)), and she picks from \(\{A,R\}\) at each, her strategy space is the Cartesian product \(\{A,R\}\times\{A,R\}\times\{A,R\}\), size \(2^3=8\) — even though, once Brother actually proposes (say) \(1\text{-}1\), only her plan for that one node ever gets executed. This is exactly the "strategy pattern object with a fully-specified switch statement, including unreachable cases" idea from §1.5.</div>
+</details>
+<details><summary>Q9. What is the difference between \(X(h)\) and \(P(h)\), and why do we need both?</summary>
+<div class="card">\(X(h)\) answers "what actions are legally available at history \(h\)?" — it's the out-edge set of node \(h\) in the tree. \(P(h)\) answers a completely orthogonal question: "whose turn is it to choose among those actions?" You need both because knowing the legal moves at a node tells you nothing about who is entitled to make that move, and knowing whose turn it is tells you nothing about what options they have. Together, \((X(h), P(h))\) fully specify the local decision problem at every node — analogous to a state machine transition needing both a set of valid transitions from a state <i>and</i> a tag for which subsystem/thread owns firing that transition.</div>
+</details>
+
+<h3>3.4 SPNE vs. PSNE</h3>
+<details><summary>Q10. In your own words, why can a PSNE on the induced NFG rely on a non-credible threat, but an SPNE cannot?</summary>
+<div class="card">A PSNE on the flattened NFG only checks that no player wants to unilaterally deviate <i>given the full strategy profile as a package</i> — and because a full strategy specifies behavior at unreached nodes too, a "bad" (irrational) action buried in an off-path branch is invisible to this check, since changing it doesn't change anyone's realized payoff along the equilibrium path. SPNE explicitly requires the restriction of \(s\) to be a PSNE of <i>every</i> subgame, including the ones that are off the main path — so an irrational action hidden in an unreached branch gets caught the moment you evaluate that specific subgame in isolation, exactly the way a targeted unit test would catch a bug that a single end-to-end integration test misses.</div>
+</details>
+<details><summary>Q11. Is every SPNE a PSNE of the induced NFG? Is the converse true?</summary>
+<div class="card">Yes, every SPNE is a PSNE of the induced NFG: subgame perfection includes optimality at the whole-game subgame (the root), which is exactly the PSNE condition on the flattened game. The converse is false — as Problem 2 demonstrates directly, the induced NFG has three PSNEs, (AG,CF), (AH,CF), (BH,CE), but only (AG,CF) is subgame perfect. So SPNE is a strict refinement (subset) of PSNE-on-the-NFG, not an equivalent characterization.</div>
+</details>
+<details><summary>Q12. Why might real-world contract design (e.g., "if you break this agreement, I'll never do business with you again") try to deliberately make an otherwise non-credible threat credible?</summary>
+<div class="card">A threat like "I'll cut you off forever" is often non-credible in a one-shot backward-induction sense, because carrying it out may also hurt the threatener (lost future business, reputational cost of pettiness, etc.) — exactly like Player 1's threat of \(H\) at node γ in Problem 2, which Player 1 would never actually want to carry out. Real institutions try to convert such threats into credible ones by attaching binding, third-party-enforced consequences (legal penalty clauses, escrow, reputational systems, repeated-game structures) so that carrying out the "threat" becomes the threatener's genuine best response if the relevant subgame is ever reached — effectively re-engineering the payoffs at that subgame so backward induction itself validates the threat, rather than relying on the other party simply believing an empty promise.</div>
+</details>
+
+<h3>3.5 Computing Correlated Equilibrium (LP)</h3>
+<details><summary>Q13. Why does the CE feasibility program have \(O(n\cdot m^2)\) inequalities, and what does each one represent?</summary>
+<div class="card">Each inequality corresponds to one (player \(i\), suggested action \(s_i\), deviation action \(s_i'\)) triple: "if told to play \(s_i\), don't want to switch to \(s_i'\)." For each of the \(n\) players there are \(m\) possible suggested actions, and for each suggested action there are up to \(m-1\) possible deviations — giving roughly \(n\cdot m\cdot(m-1) = O(n\cdot m^2)\) total constraints. This is polynomial in \(m\) and \(n\) separately (as opposed to the MSNE search space, which is exponential in the product \(mn\)), which is exactly the source of CE's computational tractability advantage.</div>
+</details>
+<details><summary>Q14. Why doesn't adding an objective (e.g., maximize total welfare \(\sum_i u_i\)) change the LP's complexity class?</summary>
+<div class="card">The CE conditions already define a <i>feasible region</i> that is a convex polytope carved out entirely by linear inequalities and one linear equality (the simplex constraint). Adding a linear objective function on top turns the feasibility problem into a standard linear <i>program</i> (optimize a linear objective over a polytope) rather than just a feasibility check — but this is still squarely inside the same polynomial-time-solvable class (LP is solvable in polynomial time via interior-point methods). Optimizing over a convex polytope costs asymptotically the same order of computation as merely testing feasibility of that same polytope; you haven't introduced any new combinatorial structure, just a direction to search within the already-tractable feasible set.</div>
+</details>
+<details><summary>Q15. Why can't we write MSNE-finding as a single linear program the way we can for CE (for \(n>2\) players, or even for \(n=2\) in general)?</summary>
+<div class="card">The MSNE indifference conditions involve <i>products</i> of each player's own mixed-strategy probabilities with the others' — e.g., in the support-based feasibility program from Week 3, the expected utility term is \(\sum_{s_{-i}}\big(\prod_{j\ne i}\sigma_j(s_j)\big)u_i(s_i,s_{-i})\), a product of decision variables belonging to <i>different</i> players. That makes the constraints genuinely nonlinear (bilinear/multilinear) in the unknowns whenever \(n\ge2\) players' probabilities multiply together — except in the special two-player zero-sum case, where the maxmin/minmax LP duality from Week 3 rescues linearity. CE sidesteps this entirely because \(\pi\) is a <i>single joint</i> distribution — there's no product of independent per-player variables anywhere in the CE constraints, since \(\pi(s_i,s_{-i})\) is already one variable, not a product of several.</div>
+</details>
+
+<h3>3.6 Backward Induction</h3>
+<details><summary>Q16. Why must <code>BACK_IND</code> fully resolve all of a node's children before it can return a value for that node — could it work top-down instead?</summary>
+<div class="card">A node's optimal action and value are defined as "the best among my children's <i>already-resolved</i> values" — you cannot know whether action \(a\) is Player \(P(h)\)'s best choice at \(h\) without first knowing what payoff each child subtree actually delivers, and that in turn depends on the choices made further down the tree. This is inherently a post-order (children-before-parent) computation, exactly like you cannot evaluate \((2+3)*4\) by looking at \(*\) before resolving \(+\). A top-down pass could only propagate <i>partial</i> information (like legal-move sets) downward, but it cannot compute optimal values top-down because those values are only well-defined once the recursion bottoms out at the base case (terminal histories) and works its way back up.</div>
+</details>
+<details><summary>Q17. In what precise sense is <code>BACK_IND</code> a generalization of the minimax algorithm rather than a different algorithm?</summary>
+<div class="card">Minimax is the special case of <code>BACK_IND</code> restricted to two-player, zero-sum games, where "Player \(P(h)\) maximizes their own payoff coordinate" collapses to "one player maximizes a scalar value \(v\), the other minimizes that same scalar \(v\)" (since \(u_2=-u_1\)). <code>BACK_IND</code> as given in the slides is strictly more general: at each node, whichever player owns that node maximizes <i>their own</i> payoff coordinate from the full payoff vector, without requiring the other player's payoff to be the negative of it — which is exactly what's needed for general-sum, \(n\)-player extensive games (like the Brother-Sister game, which is not zero-sum).</div>
+</details>
+<details><summary>Q18. If a game tree has depth \(d\) and branching factor \(b\) at every node, what is the time complexity of <code>BACK_IND</code>, and why does this matter for real games like chess?</summary>
+<div class="card">Without memoization across different paths reaching structurally-identical states, <code>BACK_IND</code> visits every node of the tree exactly once, and a full \(b\)-ary tree of depth \(d\) has \(O(b^d)\) nodes — so the algorithm runs in \(O(b^d)\) time. For chess, \(b\approx35\) and a full game can run to \(d\approx80\) or more plies, giving a tree with roughly \(10^{123}\) nodes (the slides cite \(\sim10^{150}\) states) — utterly infeasible to fully traverse. This is exactly why real chess engines abandon exact backward induction in favor of depth-limited search with a heuristic evaluation function at the cutoff depth, trading exactness for tractability — the same tension discussed under the Centipede game.</div>
+</details>
+
+<h3>3.7 Limitations of SPNE &amp; the Centipede Game</h3>
+<details><summary>Q19. Why does backward induction predict immediate defection in the Centipede game even though mutual cooperation for a while is better for both players?</summary>
+<div class="card">Backward induction reasons from the last possible move backward: at the very last node, the mover strictly prefers to defect (that's how the payoffs are constructed). Knowing this, the second-to-last mover realizes that continuing only hands control to someone who will defect next turn anyway (for a worse personal outcome than defecting right now), so they defect instead. This reasoning telescopes all the way back to move 1 — each player "reasons through" every future node's already-determined outcome and concludes that continuing is never individually optimal, even though the players are jointly leaving a larger, mutually beneficial pie on the table by not continuing longer.</div>
+</details>
+<details><summary>Q20. What is the specific critique the slides raise against the "defining principle" of SPNE itself, independent of empirical evidence from experiments?</summary>
+<div class="card">SPNE's definition requires evaluating "what is optimal <i>if</i> history \(h\) is reached," treating every subgame as its own self-contained decision problem to be solved on its own terms. But the very induction that produces the SPNE prediction can simultaneously prove that certain histories (like continuing past move 1 in the Centipede game) are <i>never actually reached</i> under that same equilibrium. This creates a philosophical tension: the equilibrium concept demands rationality conditional on being in a state that the equilibrium itself proves is unreachable — a kind of self-undermining counterfactual that some game theorists argue makes the "credible" backward-induction outcome less obviously "rational" than it first appears.</div>
+</details>
+<details><summary>Q21. The slides mention three candidate explanations for why real subjects don't defect immediately: altruism, limited computational capacity, and incentive differences. Pick one and explain, in game-theoretic terms, how it would formally break the backward-induction argument.</summary>
+<div class="card">Take <b>limited computational capacity</b>: if a real player can only look ahead a bounded number of plies (say, 2 or 3) rather than fully unwinding the recursion to the terminal leaf, they simply never compute the full chain of "opponent will defect next, so I should defect now" reasoning that requires seeing all the way to the end of a potentially long centipede. Formally, this is equivalent to running <code>BACK_IND</code> with a depth cutoff and a heuristic value function substituted in at that cutoff (exactly as discussed for chess engines in Q18) — and if the heuristic at the cutoff depth doesn't perfectly encode "the true backward-induction value," the resulting "locally optimal" action at move 1 can easily be Continue rather than Defect, breaking the chain the exact algorithm would have produced.</div>
+</details>
+
+</section>
+
+<!-- ============================================================ -->
+<section id="problems">
+<h2>4. Practice Problem Set</h2>
+
+<div class="problem">
+<h3 style="margin-top:0">Problem 1 <span class="tag easy">Easy</span> — Backward Induction Trace</h3>
+<p>Consider the following PIEFG (payoffs listed as (Player 1, Player 2)):</p>
+<div class="tree">
+Player 1 (root)
+ ├─ L ──> Player 2 (node α)
+ │         ├─ l ──> (3, 1)
+ │         └─ r ──> (1, 4)
+ └─ R ──> Player 2 (node β)
+           ├─ l ──> (2, 2)
+           └─ r ──> (0, 5)
+</div>
+<p>Trace the <code>BACK_IND</code> algorithm by hand: (a) compute Player 2's optimal action at node α and at node β; (b) using those, compute Player 1's optimal action at the root; (c) state the full SPNE strategy profile (as complete contingency plans for both players) and the resulting outcome.</p>
+</div>
+
+<div class="problem">
+<h3 style="margin-top:0">Problem 2 <span class="tag medium">Medium</span> — NFG Conversion &amp; Non-Credible Threats</h3>
+<p>Consider the following PIEFG:</p>
+<div class="tree">
+Player 1 (root)
+ ├─ A ──> Player 2 (node α)
+ │         ├─ C ──> (3, 8)
+ │         └─ D ──> (8, 3)
+ └─ B ──> Player 2 (node β)
+           ├─ E ──> (5, 5)
+           └─ F ──> Player 1 (node γ)
+                     ├─ G ──> (2, 10)
+                     └─ H ──> (1, 0)
+</div>
+<p>(a) List Player 1's strategy space (contingency plans over the root <i>and</i> node γ) and Player 2's strategy space (contingency plans over node α <i>and</i> node β). (b) Convert this into a \(4\times4\) Normal Form Game matrix. (c) Find <b>all</b> pure-strategy Nash equilibria (PSNEs) of this matrix. (d) For each PSNE found, determine whether it survives subgame perfection or relies on a non-credible threat — justify using the subgame at node γ and the subgame rooted at node β.</p>
+</div>
+
+<div class="problem">
+<h3 style="margin-top:0">Problem 3 <span class="tag hard">Hard</span> — Formulating the CE Linear Program</h3>
+<p>Consider the "Busy Crossroad" \(2\times2\) game (Player 1 = row = Car 1, Player 2 = column = Car 2):</p>
+<table>
+<tr><th></th><th>Wait</th><th>Go</th></tr>
+<tr><th>Wait</th><td>0, 0</td><td>1, 2</td></tr>
+<tr><th>Go</th><td>2, 1</td><td>-10, -10</td></tr>
+</table>
+<p>Let \(a=\pi(W,W)\), \(b=\pi(W,G)\), \(c=\pi(G,W)\), \(d=\pi(G,G)\) be the four unknowns of the correlated strategy (row player's action listed first). (a) Write out <b>all four</b> incentive-compatibility inequality constraints required for \(\pi\) to be a correlated equilibrium (one per player per possible deviation), fully simplified in terms of \(a,b,c,d\). Include the probability-simplex constraints. (b) Using your constraints from (a), verify algebraically whether \(\pi(W,G)=\pi(W,W)=\pi(G,W)=\tfrac13,\ \pi(G,G)=0\) (the plan posed as an open question in lecture) is indeed a valid CE. (c) Compute the expected payoff to each player under this \(\pi\), and compare it to the best-payoff MSNE of this game to illustrate why a mediator can be valuable.</p>
+</div>
+
+</section>
+
+<!-- ============================================================ -->
+<section id="solutions">
+<h2>5. Solutions</h2>
+<p style="font-family:Arial,sans-serif;color:var(--muted);font-size:.9rem;">Click each problem to reveal the full step-by-step solution.</p>
+
+<details>
+<summary>Solution — Problem 1 (Easy)</summary>
+<div class="card">
+<p><b>(a) Player 2's decision at nodes α and β (base-case recursion resolves first):</b></p>
+<p>At node α: <code>l</code> gives Player 2 a payoff of 1; <code>r</code> gives Player 2 a payoff of 4. Since \(4>1\), <code>BACK_IND</code> returns <code>best_action[P2] = r</code> with value \((1,4)\).</p>
+<p>At node β: <code>l</code> gives Player 2 a payoff of 2; <code>r</code> gives Player 2 a payoff of 5. Since \(5>2\), <code>BACK_IND</code> returns <code>best_action[P2] = r</code> with value \((0,5)\).</p>
+
+<p><b>(b) Player 1's decision at the root</b> (using the memoized values just computed as the "effective payoff" of each branch):</p>
+<p>\(L\) leads (via P2's optimal <code>r</code>) to \((1,4)\) → Player 1 gets 1.<br>
+\(R\) leads (via P2's optimal <code>r</code>) to \((0,5)\) → Player 1 gets 0.</p>
+<p>Since \(1 > 0\), <code>BACK_IND</code> returns <code>best_action[P1] = L</code> at the root.</p>
+
+<p><b>(c) Full SPNE strategy profile:</b></p>
+<div class="card def" style="margin-top:.6rem;">
+Player 1: play \(L\) at the root.<br>
+Player 2: play \(r\) at node α <i>and</i> \(r\) at node β (a complete contingency plan covering both of Player 2's possible nodes, even though only α is ever actually reached).<br>
+<b>Equilibrium path outcome:</b> \((L, r)\) → payoff \((1,4)\).
+</div>
+<p style="font-family:Arial,sans-serif;font-size:.9rem;color:var(--muted);">Node β and its action are "dead code" along the realized path — but a full strategy (and hence a full SPNE) must specify what Player 2 would do there too, exactly as the definition of \(S_i\) in §1.5 requires.</p>
+</div>
+</details>
+
+<details>
+<summary>Solution — Problem 2 (Medium)</summary>
+<div class="card">
+<p><b>(a) Strategy spaces:</b></p>
+<p>Player 1's strategy is a pair (action at root, action at node γ) — even though γ is only reached if Player 1 played \(B\) <i>and</i> Player 2 played \(F\):
+\[
+S_1 = \{AG,\ AH,\ BG,\ BH\}
+\]
+Player 2's strategy is a pair (action at node α, action at node β):
+\[
+S_2 = \{CE,\ CF,\ DE,\ DF\}
+\]
+
+<p><b>(b) The induced \(4\times4\) NFG</b> (Player 1's payoff, Player 2's payoff). Each cell is computed by walking the tree: e.g. row <code>AG</code> vs column <code>CF</code> means root=\(A\), so we go straight to node α, and column CF's first component is \(C\) → outcome \((3,8)\), regardless of the unused \(G\)/\(F\) components.</p>
+<table>
+<tr><th></th><th>CE</th><th>CF</th><th>DE</th><th>DF</th></tr>
+<tr><th>AG</th><td>3, 8</td><td>3, 8</td><td>8, 3</td><td>8, 3</td></tr>
+<tr><th>AH</th><td>3, 8</td><td>3, 8</td><td>8, 3</td><td>8, 3</td></tr>
+<tr><th>BG</th><td>5, 5</td><td>2, 10</td><td>5, 5</td><td>2, 10</td></tr>
+<tr><th>BH</th><td>5, 5</td><td>1, 0</td><td>5, 5</td><td>1, 0</td></tr>
+</table>
+
+<p><b>(c) All PSNEs</b> (checking every cell for unilateral deviations):</p>
+<p>• <b>(AG, CF)</b> = (3,8): Player 1's column-CF payoffs are \(3,3,2,1\) for AG,AH,BG,BH — max is 3, tied at AG/AH, so AG is a best response. Player 2's row-AG payoffs are \(8,8,3,3\) for CE,CF,DE,DF — max is 8, tied at CE/CF, so CF is a best response. ✓ PSNE.</p>
+<p>• <b>(AH, CF)</b> = (3,8): identical reasoning (AH ties AG for Player 1; CF ties CE for Player 2). ✓ PSNE.</p>
+<p>• <b>(BH, CE)</b> = (5,5): Player 1's column-CE payoffs are \(3,3,5,5\) — max is 5, tied at BG/BH, so BH is a best response. Player 2's row-BH payoffs are \(5,0,5,0\) — max is 5, tied at CE/DE, so CE is a best response. ✓ PSNE.</p>
+<p>No other cell achieves a simultaneous best response in both directions (you can check e.g. (BG,CF)=(2,10): Player 1 would deviate to AG for 3&gt;2 — not a PSNE).</p>
+
+<p><b>(d) Subgame perfection check.</b> First solve the subgames directly via backward induction:</p>
+<p><b>Subgame at node γ</b> (Player 1 chooses G vs H): \(G\to(2,10)\) gives Player 1 a payoff of 2; \(H\to(1,0)\) gives Player 1 a payoff of 1. Since \(2>1\), the <i>only</i> PSNE of this one-player subgame is \(G\). So <b>any equilibrium specifying \(H\) at node γ is not subgame perfect</b> — it fails the definition directly, whether or not γ is reached under the overall profile.</p>
+<p><b>Subgame at node β</b> (Player 2 chooses E vs F, given γ resolves to G per the above): \(E\to(5,5)\) gives Player 2 a payoff of 5; \(F\to\)(via γ's optimal G)\(\to(2,10)\) gives Player 2 a payoff of 10. Since \(10>5\), the unique PSNE of this subgame is \(F\).</p>
+<p><b>Subgame at node α</b> (Player 2 chooses C vs D): \(C\to(3,8)\) gives Player2 payoff 8; \(D\to(8,3)\) gives Player2 payoff 3. Unique PSNE: \(C\).</p>
+<p><b>Root subgame</b> (whole game): Player 1 compares \(A\to\)(via α's optimal \(C\))\(\to(3,8)\), payoff 3, versus \(B\to\)(via β's optimal \(F\), which itself routes through γ's optimal \(G\))\(\to(2,10)\), payoff 2. Since \(3>2\), Player 1's unique optimal root action is \(A\).</p>
+
+<div class="card def" style="margin-top:.6rem;">
+<b>Unique SPNE:</b> Player 1 plays \((A, G)\) = <code>AG</code>; Player 2 plays \((C, F)\) = <code>CF</code>. Outcome: \((3,8)\).
+</div>
+
+<p>Now classify each of the three PSNEs from (c):</p>
+<ul>
+<li><b>(AG, CF)</b> — exactly matches the backward-induction result. <b>This is the (unique) SPNE</b> — fully credible at every subgame.</li>
+<li><b>(AH, CF)</b> — relies on Player 1's off-path commitment to play \(H\) at node γ, but node γ's subgame shows \(G\) strictly dominates \(H\) for Player 1 (\(2>1\)). Since node γ is never reached when Player 1 plays \(A\) at the root, this "threat" of \(H\) is <b>never tested</b>, which is exactly why it survives as an NFG-level PSNE — but it is a <b>non-credible threat</b> and this profile is <b>not subgame perfect</b>.</li>
+<li><b>(BH, CE)</b> — here Player 2's choice of \(E\) at node β is rationalized only by <i>assuming</i> Player 1 would actually play the irrational \(H\) at node γ if reached (making \(F\) look bad, payoff 0, versus \(E\)'s payoff 5). But since \(G\) is actually optimal for Player 1 at γ, \(F\) truly leads to payoff 10 for Player 2 — so Player 2 would strictly prefer to deviate to \(F\) if Player 1's threat were credible. This profile is propped up by the same non-credible threat (\(H\)) and is therefore <b>also not subgame perfect</b>.</li>
+</ul>
+<p style="font-family:Arial,sans-serif;font-size:.9rem;color:var(--muted);">This is a clean illustration of the slide's core point: the NFG flattening admits 3 PSNEs, but subgame perfection (which requires optimality at <i>every</i> subgame, not just along the realized path) prunes it down to the single credible outcome \((AG,CF)\).</p>
+</div>
+</details>
+
+<details>
+<summary>Solution — Problem 3 (Hard)</summary>
+<div class="card">
+<p><b>(a) Deriving the four CE constraints.</b> Recall the general CE condition: for player \(i\), suggested action \(s_i\), deviation \(s_i'\):
+\[
+\sum_{s_{-i}} \pi(s_i,s_{-i})u_i(s_i,s_{-i}) \ge \sum_{s_{-i}} \pi(s_i,s_{-i})u_i(s_i',s_{-i})
+\]
+<p>Payoffs: \(u_1(W,W){=}0,\ u_1(W,G){=}1,\ u_1(G,W){=}2,\ u_1(G,G){=}{-}10\); \(u_2(W,W){=}0,\ u_2(G,W){=}1,\ u_2(W,G){=}2,\ u_2(G,G){=}{-}10\).</p>
+
+<p><b>Player 1, suggested \(W\), deviate to \(G\)</b> (weight by \(\pi(W,\cdot)=a,b\)):
+\[
+a\cdot u_1(W,W) + b\cdot u_1(W,G) \ \ge\ a\cdot u_1(G,W) + b\cdot u_1(G,G)
+\]
+\[
+0\cdot a + 1\cdot b \ \ge\ 2a + (-10)b \quad\Longrightarrow\quad b \ge 2a - 10b \quad\Longrightarrow\quad \boxed{2a - 11b \le 0}
+\]
+
+<p><b>Player 1, suggested \(G\), deviate to \(W\)</b> (weight by \(\pi(G,\cdot)=c,d\)):
+\[
+c\cdot u_1(G,W) + d\cdot u_1(G,G) \ \ge\ c\cdot u_1(W,W) + d\cdot u_1(W,G)
+\]
+\[
+2c + (-10)d \ \ge\ 0\cdot c + 1\cdot d \quad\Longrightarrow\quad 2c - 10d \ge d \quad\Longrightarrow\quad \boxed{2c - 11d \ge 0}
+\]
+
+<p><b>Player 2, suggested \(W\), deviate to \(G\)</b> (weight by \(\pi(\cdot,W)=a,c\)):
+\[
+a\cdot u_2(W,W) + c\cdot u_2(G,W) \ \ge\ a\cdot u_2(W,G) + c\cdot u_2(G,G)
+\]
+\[
+0\cdot a + 1\cdot c \ \ge\ 2a + (-10)c \quad\Longrightarrow\quad c \ge 2a - 10c \quad\Longrightarrow\quad \boxed{2a - 11c \le 0}
+\]
+
+<p><b>Player 2, suggested \(G\), deviate to \(W\)</b> (weight by \(\pi(\cdot,G)=b,d\)):
+\[
+b\cdot u_2(W,G) + d\cdot u_2(G,G) \ \ge\ b\cdot u_2(W,W) + d\cdot u_2(G,W)
+\]
+\[
+2b + (-10)d \ \ge\ 0\cdot b + 1\cdot d \quad\Longrightarrow\quad 2b - 10d \ge d \quad\Longrightarrow\quad \boxed{2b - 11d \ge 0}
+\]
+
+<p><b>Plus the simplex constraints:</b>
+\[
+a+b+c+d = 1, \qquad a,b,c,d \ge 0.
+\]
+
+<p><b>Full feasibility LP:</b></p>
+<div class="card def" style="margin-top:.5rem;">
+\[
+\begin{aligned}
+2a - 11b &\le 0 \\
+2c - 11d &\ge 0 \\
+2a - 11c &\le 0 \\
+2b - 11d &\ge 0 \\
+a+b+c+d &= 1 \\
+a,b,c,d &\ge 0
+\end{aligned}
+\]
+</div>
+
+<p><b>(b) Verifying the proposed plan</b> \(a=b=c=\tfrac13,\ d=0\):</p>
+<ul>
+<li>\(2a-11b = 2(\tfrac13)-11(\tfrac13) = \tfrac{2-11}{3} = -3 \le 0\) ✓</li>
+<li>\(2c-11d = 2(\tfrac13)-0 = \tfrac23 \ge 0\) ✓</li>
+<li>\(2a-11c = 2(\tfrac13)-11(\tfrac13) = -3 \le 0\) ✓</li>
+<li>\(2b-11d = 2(\tfrac13)-0 = \tfrac23 \ge 0\) ✓</li>
+<li>\(a+b+c+d = \tfrac13+\tfrac13+\tfrac13+0 = 1\) ✓, all four values \(\ge0\) ✓</li>
+</ul>
+<p>All six constraints hold — <b>yes, this is a valid correlated equilibrium.</b></p>
+
+<p><b>(c) Expected payoffs and comparison to MSNE.</b> Under \(\pi\) with \(a=b=c=\tfrac13,d=0\):
+\[
+\mathbb{E}[u_1] = a\cdot0 + b\cdot1 + c\cdot2 + d\cdot(-10) = \tfrac13(0) + \tfrac13(1) + \tfrac13(2) + 0 = \tfrac33 = 1
+\]
+\[
+\mathbb{E}[u_2] = a\cdot0 + b\cdot2 + c\cdot1 + d\cdot(-10) = \tfrac13(0) + \tfrac13(2) + \tfrac13(1) + 0 = \tfrac33 = 1
+\]
+<p>So this CE gives <b>each player an expected payoff of 1</b>, and — crucially — it does so <b>with zero probability of the catastrophic \((Go,Go)\) collision</b> ever occurring (since \(d=\pi(G,G)=0\)). Compare this to the fully-mixed MSNE of this game: solving the indifference conditions (Player 1 indifferent between W,G against Player 2's mix \((q,1-q)\) on (Wait,Go): \(0\cdot q + 1(1-q) = 2q + (-10)(1-q) \Rightarrow q^*=\tfrac{11}{13}\), and by symmetry Player 2's mix is the same) — under the MSNE, both players independently randomize, so the "both Go" collision \((-10,-10)\) occurs with strictly positive probability \((1-q^*)^2 = (\tfrac{2}{13})^2 = \tfrac{4}{169} \approx 2.4\%\) of the time, dragging the MSNE's expected payoff down. The CE strictly dominates the MSNE here precisely <i>because</i> the shared randomization device can guarantee the two cars' recommendations are never simultaneously "Go" — exactly the coordination a traffic light provides that two independent coin-flips cannot.</p>
+</div>
+</details>
+
+</section>
+
+</main>
+<footer>CS 6001 · Game Theory and Algorithmic Mechanism Design · Week 4 Study Module</footer>
+</body>
+</html>
