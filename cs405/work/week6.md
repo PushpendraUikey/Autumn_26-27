@@ -50,3 +50,20 @@ Ex-ante       Ex-interim
            ┌──────┴──────┐
            │             │
        First Price   Second Price
+
+
+Behavioral strategy σ
+        ↓
+Probability of reaching each node
+        ↓
+Pσ(x)
+        ↓
+Condition on reaching information set I
+        ↓
+Bayes' Rule
+        ↓
+Belief μ(x)
+        ↓
+Expected utility
+        ↓
+Best action
