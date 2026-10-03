@@ -67,3 +67,22 @@ Belief μ(x)
 Expected utility
         ↓
 Best action
+
+
+P2P file sharing
+       ↓
+Users are strategic
+       ↓
+Free-riding problem
+       ↓
+BitTorrent breaks files into pieces
+       ↓
+Repeated interaction
+       ↓
+Tit-for-Tat / reciprocity
+       ↓
+Better incentives to upload
+       ↓
+But users can still manipulate the protocol
+       ↓
+BitThief / Strategic Piece Revealer / BitTyrant
