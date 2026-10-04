@@ -146,3 +146,16 @@ for EVERY θi?
      │
      ↓
 Bayesian Equilibrium
+
+
+Higher bid
+   ↓
+More likely to win
+   BUT
+Less profit if you win
+
+Lower bid
+   ↓
+Less likely to win
+   BUT
+More profit if you win
