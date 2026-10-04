@@ -86,3 +86,19 @@ Better incentives to upload
 But users can still manipulate the protocol
        ↓
 BitThief / Strategic Piece Revealer / BitTyrant
+
+
+             Nature
+               │
+          chooses θ
+               │
+        ┌──────┴──────┐
+        ↓             ↓
+    Player 1       Player 2
+    sees θ₁        sees θ₂
+        │             │
+        ↓             ↓
+       a₁            a₂
+        └──────┬──────┘
+               ↓
+             Payoffs
