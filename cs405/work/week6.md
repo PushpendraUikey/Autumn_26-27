@@ -125,3 +125,24 @@ Ex-interim utilities for each possible type
         |                     |
   "What do I expect?"   "Given my type,
                          what do I expect?"
+
+
+Bayesian Game
+     │
+     ├── Type θi
+     │
+     ↓
+Strategy: si : Θi → Ai
+     │
+     ↓
+Know own type
+     │
+     ↓
+Ex-interim utility
+     │
+     ↓
+Is prescribed action optimal
+for EVERY θi?
+     │
+     ↓
+Bayesian Equilibrium
