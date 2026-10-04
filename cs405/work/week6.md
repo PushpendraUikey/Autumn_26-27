@@ -102,3 +102,10 @@ BitThief / Strategic Piece Revealer / BitTyrant
         └──────┬──────┘
                ↓
              Payoffs
+
+
+Ex-ante utility
+       =
+average of
+       ↓
+Ex-interim utilities for each possible type
