@@ -109,3 +109,19 @@ Ex-ante utility
 average of
        ↓
 Ex-interim utilities for each possible type
+
+
+                 Nature
+                   |
+             chooses θ
+                   |
+        ┌──────────┴──────────┐
+        |                     |
+     BEFORE                 AFTER
+  observing θi           observing θi
+        |                     |
+    Ex-ante              Ex-interim
+    utility                utility
+        |                     |
+  "What do I expect?"   "Given my type,
+                         what do I expect?"
