@@ -89,3 +89,30 @@ class Drawing {
             }
         }
 };
+
+
+class Document {
+    vector<Element*> elements;
+
+    public:
+        void add(Element* e) {
+            elements.push_back(e);
+        }
+
+        void accept(Visitor &v){
+            for(Element* e : elements) {
+                e->accept(v);
+            }
+        }
+};
+
+
+int main() {
+    Document doc;
+    doc.add(new Circle());
+    doc.add(new Rectangle());
+    doc.add(new Triangle());
+
+    DrawVisitor draw;
+    doc.accept(draw);
+}
