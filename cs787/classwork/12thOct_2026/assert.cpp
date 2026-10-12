@@ -1,3 +1,5 @@
+#define NDEBUG	// This switches off the defensive programming and any assertion is removed during the compile time.
+				// Without it all the assertions would be placed at compile time and checked during the runtime.
 #include <cassert>
 class account {
 int bal;
