@@ -21,3 +21,5 @@ int main () {
 }
 
 // where is the using? --> already unlocked inside the file
+// unnamed/anonymous namespace are by default unlocked inside the file,
+// named namespace are by default locked inside the file. You need to have a 'using' keyword.
