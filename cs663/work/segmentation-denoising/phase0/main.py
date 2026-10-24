@@ -1,5 +1,6 @@
 import numpy as np
 import math
+import matplotlib.pyplot as plt
 
 # Gaussian Kernel
 def A(val: float, h:float) -> float :
@@ -28,5 +29,18 @@ if __name__ == "__main__":
     for val in lst:
         nlst.append(B(val, h, lst))
 
-    print(A(0, h))
+    # print(A(0, h))
     # print(nlst)
+    query_points = np.linspace(-1, 5, 500)
+    h_values = [0.2, 0.6, 2.0] # small h, weights concentrated around the data points, large h, weights spread out
+
+    for hv in h_values:
+        t_kde = []
+        for qpts in query_points:
+            t_kde.append(B(qpts, hv, lst))
+
+        plt.plot(query_points, t_kde, label=f"h : {hv}")
+
+    plt.legend()
+    plt.savefig("kde-estimate.png")
+        
