@@ -22,6 +22,20 @@ def B(x : float, h: float, lst: list) -> float :
 
     return val
 
+# Calculating the Mean-Shift Update
+def mean_shift_step(x, samples, h):
+    xnew = 0
+    dnom = 0
+    for si in samples:
+        enumr = (x-si)/h
+        num = np.exp(-(enumr**2)/2)
+        xnew += (num * si)
+        dnom += num
+
+    xnew /= dnom
+    return xnew
+
+
 if __name__ == "__main__":
     lst = [0.0, 0.2, 0.4, 3.0, 3.2, 3.4]
     nlst = []
@@ -43,4 +57,10 @@ if __name__ == "__main__":
 
     plt.legend()
     plt.savefig("kde-estimate.png")
-        
+
+    x_pos = [0.1, 1.7, 3.3]
+    h = 0.6
+    ux_pos = []
+    for xv in x_pos:
+        ux_pos.append(mean_shift_step(xv, lst, 0.6))
+        print(ux_pos[-1])
