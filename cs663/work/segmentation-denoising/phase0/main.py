@@ -38,15 +38,21 @@ def mean_shift_step(x, samples, h):
 def mean_shift(x0, samples, h, tol, max_iter):
     currx = x0
     iteration = 0
+    visited = [currx]
     while iteration < max_iter:
         newx = mean_shift_step(currx, samples, h)
         delta = abs(newx-currx)
         currx = newx
+        visited.append(currx)
         iteration += 1
         print(f"for x0 : {x0}, current x : {currx}, iteration : {iteration}")
         if delta < tol:
             break
-        
+
+    plt.plot(visited, label=f"means shift for start:{x0} and h:{h}")
+    plt.legend()
+    plt.show()
+    plt.close()
     return currx, iteration
 
 if __name__ == "__main__":
@@ -70,6 +76,7 @@ if __name__ == "__main__":
 
     plt.legend()
     plt.savefig("kde-estimate.png")
+    plt.close()
 
     x_pos = [0.1, 1.6, 3.3]
     h = 0.6
