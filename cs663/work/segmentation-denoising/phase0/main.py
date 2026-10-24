@@ -38,22 +38,38 @@ def mean_shift_step(x, samples, h):
 def mean_shift(x0, samples, h, tol, max_iter):
     currx = x0
     iteration = 0
-    visited = [currx]
+    # visited = [currx]
     while iteration < max_iter:
         newx = mean_shift_step(currx, samples, h)
         delta = abs(newx-currx)
         currx = newx
-        visited.append(currx)
+        # visited.append(currx)
         iteration += 1
         print(f"for x0 : {x0}, current x : {currx}, iteration : {iteration}")
         if delta < tol:
             break
 
-    plt.plot(visited, label=f"means shift for start:{x0} and h:{h}")
-    plt.legend()
-    plt.show()
-    plt.close()
+    # plt.plot(visited, label=f"means shift for start:{x0} and h:{h}")
+    # plt.legend()
+    # plt.show()
+    # plt.close()
     return currx, iteration
+
+def cluster_modes(modes, merge_tol):
+
+    np.sort(modes)
+    mode_label = {}
+    i = 0
+    m = 1
+    mode_label.setdefault(m, []).append(modes[0])
+    while i < len(modes)-1:
+        if abs(modes[i] - modes[i+1]) > merge_tol:
+            m += 1
+        mode_label.setdefault(m, []).append(modes[i+1])
+        i += 1
+
+    return mode_label
+        
 
 if __name__ == "__main__":
     lst = [0.0, 0.2, 0.4, 3.0, 3.2, 3.4]
@@ -85,7 +101,15 @@ if __name__ == "__main__":
         ux_pos.append(mean_shift_step(xv, lst, 0.6))
         print(ux_pos[-1])
 
-    ux_pos = []
-    for xv in x_pos:
-        ux_pos.append(mean_shift(xv, lst, h, 1e-6, 100))
-        print(ux_pos[-1])
+    modes = []
+    for xv in lst:
+        modes.append(mean_shift(xv, lst, h, 1e-6, 100)[0])
+        print(modes[-1])
+    modes = np.sort(modes)
+    mode_cluster = cluster_modes(modes, 0.1)
+    for m in mode_cluster:
+        print(f"mode label : {m}  --- mode value : {np.average(mode_cluster.get(m))}")
+
+    for m in modes:
+        print(f"{m}, ")
+    
