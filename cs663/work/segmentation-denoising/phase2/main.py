@@ -83,6 +83,12 @@ def mean_shift(current, samples, hs, hr, tol, max_iter):
 
     return current, iteration
 
+def feature_distance(a, b, hr, hs):
+    first = np.sum(np.square(a[:3]-b[:3]))/(hr**2)
+    second = np.sum(np.square(a[3:]-b[3:]))/(hs**2)
+    dist = np.sqrt(first+second)
+    return dist
+
 if __name__ == '__main__':
     f1 = np.array([0, 0, 0, 0, 0], dtype=float)
     f2 = np.array([0, 85, 51, 1, 0], dtype=float)
@@ -93,8 +99,8 @@ if __name__ == '__main__':
     print(mean_shift_weight(f1, f1, hs, hr))  # 1.0
     print(mean_shift_weight(f1, f2, hs, hr))  # Less than 1
 
-    f1 = create_synthetic_img(2, 3, 3)
-    samples = convert_into_feature(f1)
+    simg = create_synthetic_img(2, 3, 3)
+    samples = convert_into_feature(simg)
     updated_features = []
 
     for feature_ in samples:
@@ -110,5 +116,10 @@ if __name__ == '__main__':
     for feature_ in samples:
         fnew, iteration = mean_shift(feature_, samples, hs, hr, tol, max_iter)
         converged_features.append(fnew)
+
+    if feature_distance(f1, f1, hr, hs)==0:
+        print(f"Identical features have dist 0")
+    if feature_distance(f1, f2, hr, hs) == feature_distance(f2, f1, hr, hs):
+        print(f"Commutative")
 
     
