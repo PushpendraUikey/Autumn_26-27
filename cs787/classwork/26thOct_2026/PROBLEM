@@ -1,0 +1,12 @@
+design a naming service
+
+to register tuples (Name, Object pointer)
+
+use it  to store objects of all sorts of classes
+
+
+extract the objects and use them correctly via correct casts..
+
+if erroneous, flag errors and skip 
+
+

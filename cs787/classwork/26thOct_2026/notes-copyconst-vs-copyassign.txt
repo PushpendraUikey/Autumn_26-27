@@ -1,0 +1,32 @@
+iYour logic is correct! You've intentionally added +20 in the copy constructor and +30 in the copy 
+assignment operator to demonstrate that they behave differently.
+
+
+Expected output
+Copy constructor called
+s1 marks: 90
+s2 marks: 110
+s3 marks: 70
+Copy assignment operator called
+s3 marks: 120
+
+
+Why does this happen?
+1. Student s2 = s1;
+- s1.marks contains 90.
+- The copy constructor executes new int(*other.marks + 20).
+- Therefore, s2.marks contains 90 + 20 = 110.
+
+2. Student s3(70);
+- The regular constructor runs.
+- s3.marks contains 70.
+- No copy constructor or assignment operator is called.
+
+3. s3 = s1;
+- s3 already exists, so the copy assignment operator runs.
+- It executes *marks = *other.marks + 30.
+- Therefore, s3.marks becomes 90 + 30 = 120.
+
+The key concept: The copy constructor and copy assignment operator can implement completely different logic. 
+C++ selects which one to call based on whether you're creating a new object or assigning to an existing one.
+
