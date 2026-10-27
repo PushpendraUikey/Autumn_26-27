@@ -56,3 +56,44 @@ The Fix:
 
     That is what I did in the exception2_1.cpp
 
+===========================================================================================
+    Exceptions in C++ break the normal stack rules on purpose.
+        If the exception object were created on the local call stack of f(), it would indeed be destroyed
+        when f() exits, leaving nothing for the `catch` block to receive.
+
+    The "Exception Space"
+
+        When you execute throw A();, the C++ compiler does not place the temporary object on f()'s local stack. 
+        Instead, it allocates this object in a special, hidden memory area managed by the C++ runtime (often
+        called the exception space).
+        Because this lives in this special runtime-managed space, it survives the destruction of f()'s stack frame.
+
+    Actual Program Flow
+    What happens behind the scene when an exception is thrown:
+    
+    1. The Throw: throw A(); is called. The C++ runtime allocates memory in the hidden exception space and 
+        constructs the original A object there.
+
+    2. Stack Unwinding: The runtime immediately reports f() and starts tearing down the call stack. Any local
+        variables inside f() (and inside the try block) are destroyed. The original exception object is 
+        safely preserved in the exception space - is not on any stack.
+
+    3. catch block initialization: The runtime finds catch (A a). It uses the original object in the 
+        exception space to initialize your local variable a. Because you caught by value, it copies the
+        original object into a.
+
+    4. Catch Block Execution: Catch block code runs and prints `caught A`
+
+    5. Catch Block Ends: The local variable a goes out of scope and is destroyed, printing the first 
+        `A destructor`.
+
+    6. Exception Cleanup: The catch block is now completely finished. The C++ runtime determines the 
+        exception has been fully handled, so it finally destroys the original object sitting in the 
+        hidden exception space, printing the second A destructor.
+
+
+If C++ destroyed the original object before the `catch` block ran, catching by reference ( catch (const A& a))
+would be impossible because the reference would point to dead memory. By keeping the original object alive
+in the exception space until the very end of the catch block, C++ guarantees that the exception data 
+remains perfectly valid for as long as the handler needs it.
+
