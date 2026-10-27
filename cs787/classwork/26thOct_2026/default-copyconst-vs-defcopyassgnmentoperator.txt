@@ -1,0 +1,45 @@
+Yes, their copying behavior is essentially the same: both perform member-by-member copying. But they are used at different times.
+1. Default copy constructor
+Student s1(90);
+Student s2 = s1;
+
+
+The compiler-generated copy constructor copies each member from s1 into the newly created object s2.
+2. Default copy assignment operator
+Student s1(90);
+Student s2(70);
+
+s2 = s1;
+
+
+The compiler-generated copy assignment operator copies each member from s1 into the already existing object s2.
+What's the difference for a pointer?
+Suppose the class contains int* marks.
+Copy constructor
+
+Creates a new object
+
+Student s2 = s1;
+
+Copy assignment
+
+Updates an existing object
+
+s2 = s1;
+
+
+
+Both copy the pointer address, so the resulting objects point to the same integer.
+Feature	                    Copy constructor	        Copy assignment operator
+Object	                    Being created	            Already exists
+Copies members	            Yes	                        Yes
+Copies raw pointer address	Yes	                        Yes
+Automatically deep-copies 	No	                        No
+pointed-to data
+Can be customized separately Yes	                    Yes
+
+One subtle difference: the default copy assignment operator overwrites the existing object's members. 
+If a pointer previously owned dynamically allocated memory, overwriting it can leak that memory. 
+The copy constructor doesn't overwrite an existing object's members because it creates a new object.
+
+Bottom line: Same basic member-by-member copying strategy, but different purposes and lifecycles.
