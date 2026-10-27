@@ -38,3 +38,4 @@ catch (int b) {
 }
 
 
+// catching an exception occur is done using the "type of exception(data type)" being thrown.

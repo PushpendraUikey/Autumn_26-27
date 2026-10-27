@@ -1,0 +1,58 @@
+In exception2.cpp, the reason you're seeing multiple destructor calls is because your catch blocks are catching
+the exceptions `by value` rather than by reference.
+
+
+When you catch an exception by value (e.g. catch(A a)), C++ creates a temporary copy of the thrown exception object.
+The implicit copy constructors are being called silently.
+
+for exceptoin2.cpp:
+Case: Input 0 - (Throwing A)
+    1. throw A(); : A temporary exception object of type A is created in memory.
+        Output: A Constructor
+
+    2. catch (A a): The exception matches this block. C++ creates a local variable a inside the catch block by
+        copying the temporary exception object. 
+    
+    3. Execution: The code inside the catch block runs.
+        Output: caught A.
+    
+    4. End of catch block: The local variable a goes out of scope and is destroyed.
+        Output: A destructor (Destructor 1: the copied object)
+
+    5. Exception cleanup: C++ destroys the original temporary exception object created by the throw() statement.
+        Output: A destructor (Destructor 2: the original thrown object)
+
+        ---- The exact same mechanism applied for int input 2 / Throwing D ----
+
+
+Case: Input 1 (Throwing C - The "Strange" case) 
+    This is a little complex case since it involves inheritance and `Object Slicing`. C inherits from B.
+
+    1. throw C(); : A temporary exception object of type C is created. Because C inherits from B, the base
+        class is constructed first.
+        Output: B Constructor
+        Output: C Constructor
+    
+    2. catch (B b): A thrown `C` object is perfectly valid to be caught as a `B` object. However because 
+        you catch by value, C++ creates a local variable `b` of type B. It "slices off" the C part of the 
+        object and only copies the B base sub-object into `b`.
+
+    3. Execution: The catch block executes
+        Output: caught B 
+    
+    4. End of Catch block: The local sliced variable `b`(which is strictly of type B) goes out of scope and
+        is destroyed.
+        Output: B destructor (Destructor 1: the sliced local copy)
+
+    5. Exception cleanup: C++ destroys the original, full C temporary exception object.
+        Destruction happens in the reverse order of construction (Derived, then Base)
+        Output: C destructor (Destructor 2: the derived part of the original object)
+        Output: B destructor (Destructor 3: the base part of the original object)
+
+
+The Fix: 
+    To prevent unnecessary copying, double destruction, and object slicing, standard C++ practice dictates 
+    that you should "always throw by value and catch by reference(usually const reference)"
+
+    That is what I did in the exception2_1.cpp
+
