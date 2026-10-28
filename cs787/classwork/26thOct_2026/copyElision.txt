@@ -1,0 +1,31 @@
+
+    Copy elision is a core compiler optimization in C++ that eliminates unnecessary copying or moving of 
+    objects. Instead constructing a temporary object in memory and then copying or moving it its final
+    destination, the compiler instructs the program to construct the object directly where it belongs.
+
+    Compiler is explicitly allowed to alter the program's observable behavior - any print statements or 
+    side effects inside your copy/move constructors will simply not run.
+
+
+    Two Pillars of Copy Elision
+    1. Return Value Optimization (RVO)
+        It occurs when a function returns an unnamed temporary object.
+        ex:
+        Widget createWidget() {
+            return Widget();    // unnamed temporary
+        }
+
+        Without RVO: compiler would construct a temporary Widget inside the function, call the copy/move
+            constructor to pass it to main, and then destroy temporary.
+        With RVO: compiler constructs the widget directly inside the memory slot allocated for w in main.
+
+    2. Named Return Value Optimization (NRVO)
+        NRVO applies when a function returns a named local variable.
+        ex:
+        Widget createNamedWidget() {
+            Widget localWidget;
+            // do some operations
+            return localWidget;
+        }
+        Compiler reuses the memory allocated for the caller's variable directly inside the funciton 
+        scope, avoiding copy/move upon return.
