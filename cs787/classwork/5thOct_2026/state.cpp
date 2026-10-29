@@ -25,6 +25,11 @@ class LIFO {
 	friend class PARTIAL;
 	public:
 		LIFO(int cap);
+		~LIFO() {
+			delete fullstate;
+			delete emptystate;
+			delete partialstate;
+		}
 		int add(int x);
 		int fetch();
 	private:
@@ -100,4 +105,5 @@ LIFO *bb = new LIFO (4);
 	cout << bb->add(4) << endl;
 	cout << bb->add(5) << endl;
 	cout << bb->add(6) << endl;
+	delete bb;
 };
