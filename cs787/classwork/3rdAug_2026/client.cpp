@@ -35,5 +35,7 @@ int main()
         cout << "Server: " << buffer << endl;
     }
 
+    send(clientSocket, "q", 1, 0);
+
     close(clientSocket);
 }
