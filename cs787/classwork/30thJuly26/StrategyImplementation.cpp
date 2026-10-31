@@ -10,7 +10,7 @@ class Compositor {
         ) = 0;
     protected:
         Compositor() = default;
-}
+};
 
 class Composition {
     public:
