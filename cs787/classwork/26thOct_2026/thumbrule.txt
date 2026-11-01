@@ -1,0 +1,3 @@
+Use static_cast when you know the object's actual type; 
+use dynamic_cast when you need to check its actual type 
+at runtime.
