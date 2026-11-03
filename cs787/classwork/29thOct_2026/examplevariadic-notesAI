@@ -1,0 +1,107 @@
+This is a C++ example of a variadic function template that prints multiple arguments using recursion.
+
+cpp
+
+```
+void print() {
+    cout << "last\n";
+}
+
+template <typename T, typename... VARS>
+void print(T e, VARS... el) {
+    cout << e << " ";
+    print(el...);
+}
+```
+
+## How it works
+
+There are two function definitions:
+
+1. Base case
+   cpp
+   ```
+   void print() {
+       cout << "last\n";
+   }
+   ```
+   This function takes no arguments. It stops the recursion and prints `last`.
+2. Recursive case
+   cpp
+   ```
+   template <typename T, typename... VARS>
+   void print(T e, VARS... el) {
+       cout << e << " ";
+       print(el...);
+   }
+   ```
+   - `T e` represents the first argument.
+   - `typename... VARS` represents the types of the remaining arguments.
+   - `VARS... el` represents the remaining arguments themselves.
+   - `print(el...)` calls `print` again with the remaining arguments.
+
+## Example
+
+cpp
+
+```
+#include <iostream>
+using namespace std;
+
+void print() {
+    cout << "last\n";
+}
+
+template <typename T, typename... VARS>
+void print(T e, VARS... el) {
+    cout << e << " ";
+    print(el...);
+}
+
+int main() {
+    print(10, "hello", 3.14, 'A');
+    return 0;
+}
+```
+
+Output:
+
+text
+
+```
+10 hello 3.14 A last
+```
+
+## Step-by-step execution
+
+| Function call | What gets printed | Remaining arguments |
+| --- | --- | --- |
+| `print(10, "hello", 3.14, 'A')` | `10 ` | `"hello", 3.14, 'A'` |
+| `print("hello", 3.14, 'A')` | `hello ` | `3.14, 'A'` |
+| `print(3.14, 'A')` | `3.14 ` | `'A'` |
+| `print('A')` | `A ` | None |
+| `print()` | `last` and newline | None |
+
+Key concept: `print(el...)` expands the parameter pack into individual arguments for the next function call. Each recursive call prints one argument and removes it from the list until the empty `print()` function is called.
+
+Note that `VARS... el` passes the remaining arguments by value. In modern C++, forwarding references can be used when you want to preserve argument types and value categories more precisely.
+
+
+========================================================
+
+Important things to know
+
+1. The base case is required, and it must be declared before the template. Because the recursion is happening at
+the compile time and you need to know the base case
+declaration before doing the recursive unfolding of
+the function declaration. 
+
+2. It's type-safe, unlike C's printf/va_list variadics. Each argument keeps its real type, such as int, const char* or double. The correct operator<< is overloaded at compile time using ADL.
+
+3. Passing by value copies every argument at every level. Instead you can use const T&e , VARS&... el instead
+
+4. Every different list of argument types creates a new chain of functions. With optimization on, these are usually inlined, so the runtime cost is small, but compile time and binary size grow.
+
+5. sizeof...(el) gives the number of elements in the pack at compile time.
+
+This is similar to function programming we learnt using scheme and haskell.
