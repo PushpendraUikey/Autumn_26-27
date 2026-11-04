@@ -9,18 +9,12 @@
 #include <variant>
 #include <map>
 #include <optional>
+#include <algorithm>
 using namespace std;
 
 // ---------------------------------------------------------------------------
 // Step 1: named building blocks + Fact + FactDB
 // ---------------------------------------------------------------------------
-
-// A variable such as X, Y, Z. (Binding/list storage comes in Step 3.)
-class VARIABLE {
-public:
-    string name;
-    VARIABLE(string n) : name(n) {}
-};
 
 // A constant object such as john, mary, chess.
 // Two Obj are "the same" if they are the same C++ object (same address).
@@ -35,6 +29,41 @@ class Pred {
 public:
     string name;
     Pred(string n) : name(n) {}
+};
+
+// A list of objects: the answers a variable collects from a Find (Step 3).
+class List {
+public:
+    vector<const Obj*> items;
+
+    void clear() { items.clear(); }
+    void add(const Obj* o) { items.push_back(o); }
+
+    void print() const {
+        cout << "[";
+        for (size_t i = 0; i < items.size(); i++) {
+            if (i > 0) cout << ", ";
+            cout << items[i]->name;
+        }
+        cout << "]";
+    }
+};
+
+// A variable such as X, Y, Z.
+// `values` is mutable: the variable's identity (name, address) never changes,
+// but Find is allowed to refill its answer list even through a const VARIABLE*.
+class VARIABLE {
+public:
+    string name;
+    mutable List values;
+
+    VARIABLE(string n) : name(n) {}
+
+    void print() const {
+        cout << name << " = ";
+        values.print();
+        cout << "\n";
+    }
 };
 
 // A fact: one predicate applied to any number of objects.
@@ -160,6 +189,43 @@ void printBindings(const optional<Bindings>& r)
     cout << " }\n";
 }
 
+// ---------------------------------------------------------------------------
+// Step 3: queries
+// ---------------------------------------------------------------------------
+
+// Find(pred, args...) matches the pattern against EVERY fact in FactDB.
+// For each match, every variable in the pattern appends its value to its List.
+// The lists stay aligned: index i of X, Y, Z together form the i-th answer tuple.
+// Returns the number of matching facts (so a query with no variables, e.g.
+// Find(likes, john, mary), works as a yes/no question).
+template <typename... Ts>
+size_t Find(const Pred& p, const Ts&... ts)
+{
+    Pattern pat(p, ts...);               // same variadic pack, forwarded unchanged
+
+    // Distinct variables of the pattern, in order. likes(X, X) lists X once.
+    vector<const VARIABLE*> vars;
+    for (const Term& t : pat.terms) {
+        if (holds_alternative<const VARIABLE*>(t)) {
+            const VARIABLE* v = get<const VARIABLE*>(t);
+            if (find(vars.begin(), vars.end(), v) == vars.end())
+                vars.push_back(v);
+        }
+    }
+
+    // A new query replaces the old answers of its variables.
+    for (const VARIABLE* v : vars) v->values.clear();
+
+    size_t count = 0;
+    for (const Fact& f : FactDB::all()) {
+        if (optional<Bindings> b = match(pat, f)) {
+            for (const VARIABLE* v : vars) v->values.add(b->at(v));
+            count++;
+        }
+    }
+    return count;
+}
+
 int main()
 {
     VARIABLE X{"X"}, Y{"Y"}, Z{"Z"}, A{"A"};
@@ -192,11 +258,22 @@ int main()
     // Rule (likes, X, Y, Z, likes, Z, A, likes, X, A); // variadic rule
     // Rule (likes, X, mary, likes, X, jean);          // variadic rule
 
-    // TODO Step 3: queries
-    // Find (likes, X, Y);    // create lists X,Y for corresponding elements in tuples
-    // Find (likes, john, X); // first arg is committed, creates a list in X
-    // Find (likes, Y, mary); // second arg is committed, creates a list in Y
-    // Find (loves, X, Y, Z); // creates lists in X,Y,Z for matching elements forming tuples
+    // Step 3: queries
+    cout << "\n---- Step 3: Find() ----\n";
+
+    cout << "?- likes(X, Y)       " << Find (likes, X, Y) << " match(es)\n";    // create lists X,Y for corresponding elements in tuples
+    X.print(); Y.print();
+
+    cout << "?- likes(john, X)    " << Find (likes, john, X) << " match(es)\n"; // first arg is committed, creates a list in X
+    X.print();
+
+    cout << "?- likes(Y, mary)    " << Find (likes, Y, mary) << " match(es)\n"; // second arg is committed, creates a list in Y
+    Y.print();
+
+    cout << "?- loves(X, Y, Z)    " << Find (loves, X, Y, Z) << " match(es)\n"; // creates lists in X,Y,Z for matching elements forming tuples
+    X.print(); Y.print(); Z.print();
+
+    cout << "?- likes(john, mary) " << Find (likes, john, mary) << " match(es)\n"; // no variables: a yes/no question
 
     // FactDB::dump();  // will list all facts, including newly added
 
