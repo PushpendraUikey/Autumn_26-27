@@ -22,3 +22,8 @@ GLUT is an older, classic C/C++ utility library to help write window system inde
 
 -> Control Flow: GLUT owns the event loop (via glutMainLoop()) means the libray dictates how and when your program updates and draws. 
 
+
+GLEW (OpenGL Extension Wrangler Library)
+    Writing Modern OpenGL code requires manually declaring and loading dozen or hundreds of function pointers which varies across drivers and operating systems. GLEW allows you to write portable graphics code that can tap into advanced GPU capabilities cleanly.
+
+    
