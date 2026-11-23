@@ -95,3 +95,26 @@ public:
     }
 };
 
+
+## Rule of Zero (Modern C++) 
+Classes should be designed so that they do not explicitly define any of the five special memeber functions. Instead of managing raw allocation and cleanup manually, rely on standard library abstractions like std::vector, std::string, std::unique_ptr, or std::shared_ptr. These types implement RAII internally, allowing compiler to automatically synthesize correct destructors, copy operations, and move operations for your class.
+
+<code>
+#include <vector>
+#include <string>
+
+class UserProfile {
+    std::string username;
+    std::vector<int> scores;
+public:
+    UserProfile(std::string name): username(std::move(name)){}
+
+    // Rule of zero: no destructor, copy or move operations.
+};
+
+
+Delcaring a Move Constructor automatically deletes the implicit copy constructor and copy assignment operator. If you want both, you must explicitly restore copy operations or re-define them.
+
+Declaring a Copy Constructor disables automatic gneration of move constructors. Any call to std::move() no your object will silently perform deep copy unless a move constructor is explicitly declared. 
+
+if new int[size] throws after delete[] data, data is left pointing at a freed memory. The usual fix is to allocate first and delete after, or to use copy-and-swap.
