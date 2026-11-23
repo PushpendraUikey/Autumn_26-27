@@ -51,3 +51,47 @@ public:
 };
 <code>
 
+
+## Rule of 5
+C++11 introduced the move semantics, which allowed temporary objects (rvalues) to transfer their owned resources rather deep copying them. Rule expanded to 5 member functions.
+
+1. Destructor
+2. Copy Constructor
+3. Copy Assignment Operator
+4. Move Constructor (A(A&&) noexcept)
+5. Move Assignment Operator (A& operator=(A&&) noexcept)
+
+Move constructor steal the resources from temporary objects and leave source object in a safe, destructible, empty state.
+
+<code>
+class Buffer{
+    int* data;
+    size_t size;
+
+public:
+    Buffer(size_t s): size(s), data(new int[s]) {}
+    ~Buffer() { delete[] data; }
+
+    // Copy operations
+    Buffer(const Buffer& other);
+    Buffer& operator=(const Buffer& other);
+
+    //4. Move Constructor
+    Buffer(Buffer&& other) noexcept: data(other.data), size(other.size) {
+        other.data = nullptr;
+        other.size = 0;
+    }
+
+    //5. Move Assignment Operator
+    Buffer& operator=(Buffer&& other) noexcept {
+        if(this != &other) {
+            delete[] data;  // cleanup existing resource
+            data = other.data;
+            size = other.size;
+            other.data = nullptr;
+            other.size = 0;
+        }
+        return *this;
+    }
+};
+
