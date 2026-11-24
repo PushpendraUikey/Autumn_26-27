@@ -1,219 +1,181 @@
 // ====================== 23B1023 =========================
-
-// tool.cpp
 //
-// A tiny stub generator ("rpcgen"-style tool) for RPC assignment.
+// tool.cpp -- RPC stub generator (an "rpcgen"-style tool, slides 32 and 39).
 //
-// It reads service.spec (a minimal IDL) and writes out:
-//   - proxy.h / proxy.cpp : the CLIENT-SIDE stub. Contains a class
-//        <Service>Proxy : public <Service> whose methods marshal
-//        their arguments, ship them over a TCP socket to the server,
-//        and unmarshal the result -- exactly the "socket calls here"
-//        TODO left in abstract1.cpp, filled in automatically.
-//   - stuff.h / stuff.cpp : the SERVER-SIDE skeleton. Contains a
-//        function serve_<Service>() that accepts connections,
-//        unmarshals a request, calls the REAL implementation object,
-//        marshals the result, and sends it back.
+// Input: a spec file (tiny IDL)
+//     service <ServiceName>
+//     port    <number>
+//     method  <name> <returnType> [argType1 argType2 ...]
+//     # comment lines and blank lines are ignored
+//
+// Output: ONLY the protocol glue. No sockets here: those live in the
+// hand-written reusable runtime (rpc_common / rpc_client / rpc_server).
+//   <Service>_proxy.h / .cpp   client stub: class <Service>Proxy : public <Service>
+//                              each method packs its args and calls Rpc()
+//   (server stub + implementation skeleton: Step 4)
+//
+// Protocol convention every generated stub follows (see rpc_common.h):
+//   signature = "name:ret:arg1type:arg2type..."  (class convention "foo:int:int:int")
+//   arguments are put()/get() in declaration order
 //
 // Usage: ./tool service.spec
-//
-// This only supports the shape of interface used in class
-// (single int argument, single int return, one method) but is
-// written so extending it to more methods/arg types is a matter of
-// looping over more "method" lines instead of just method[0].
 
+#include <cstdlib>
 #include <fstream>
 #include <iostream>
+#include <set>
 #include <sstream>
 #include <string>
 #include <vector>
 
+// ---------------------------------------------------------------------------
+// 1. Spec model + parser
+// ---------------------------------------------------------------------------
+
 struct Method {
     std::string name;
     std::string retType;
-    std::string argType;
+    std::vector<std::string> argTypes;   // may be empty: method ping int
 };
 
 struct ServiceSpec {
-    std::string className;
+    std::string service;
     int port = 0;
     std::vector<Method> methods;
 };
 
-static ServiceSpec parseSpec(const std::string &path) {
-    ServiceSpec spec;
+// Types the Packet layer can carry (text via << / >>, or raw for strings).
+static const std::set<std::string> kArgTypes = {"int", "long", "double", "bool", "std::string"};
+
+[[noreturn]] static void specError(const std::string& file, int line, const std::string& msg) {
+    std::cerr << file << ":" << line << ": error: " << msg << "\n";
+    std::exit(1);
+}
+
+static ServiceSpec parseSpec(const std::string& path) {
     std::ifstream in(path);
     if (!in) {
-        std::cerr << "tool: cannot open spec file " << path << std::endl;
-        exit(1);
+        std::cerr << "tool: cannot open spec file " << path << "\n";
+        std::exit(1);
     }
 
+    ServiceSpec spec;
+    std::set<std::string> seen;          // method names, to reject duplicates
     std::string line;
+    int lineNo = 0;
     while (std::getline(in, line)) {
-        // strip comments / blank lines
-        if (line.empty() || line[0] == '#') continue;
-
+        lineNo++;
         std::istringstream iss(line);
         std::string keyword;
-        iss >> keyword;
+        if (!(iss >> keyword) || keyword[0] == '#') continue;   // blank or comment
 
         if (keyword == "service") {
-            iss >> spec.className;
+            if (!(iss >> spec.service)) specError(path, lineNo, "service needs a name");
         } else if (keyword == "port") {
-            iss >> spec.port;
+            if (!(iss >> spec.port) || spec.port <= 0 || spec.port > 65535)
+                specError(path, lineNo, "port needs a number in 1..65535");
         } else if (keyword == "method") {
             Method m;
-            iss >> m.name >> m.retType >> m.argType;
+            if (!(iss >> m.name >> m.retType))
+                specError(path, lineNo, "expected: method <name> <returnType> [argTypes...]");
+            if (m.retType != "void" && !kArgTypes.count(m.retType))
+                specError(path, lineNo, "unsupported return type '" + m.retType + "'");
+            for (std::string t; iss >> t;) {
+                if (!kArgTypes.count(t))
+                    specError(path, lineNo, "unsupported argument type '" + t + "'");
+                m.argTypes.push_back(t);
+            }
+            if (!seen.insert(m.name).second)
+                specError(path, lineNo, "method '" + m.name + "' declared twice (overloading is not supported)");
             spec.methods.push_back(m);
+        } else {
+            specError(path, lineNo, "unknown keyword '" + keyword + "'");
         }
     }
+    if (spec.service.empty()) specError(path, lineNo, "missing 'service' line");
+    if (spec.methods.empty()) specError(path, lineNo, "no 'method' lines");
     return spec;
 }
 
-static void generateProxyHeader(const ServiceSpec &spec) {
-    std::ofstream out("proxy.h");
-    out << "// AUTO-GENERATED by tool.cpp from " << "service.spec" << " -- do not edit by hand\n";
-    out << "#ifndef " << spec.className << "_PROXY_H\n";
-    out << "#define " << spec.className << "_PROXY_H\n\n";
-    out << "#include <string>\n";
-    out << "#include \"" << spec.className << ".h\"\n\n";
-    out << "// Client-side stub. Looks and behaves like a local " << spec.className
-        << ", but every\n// call is shipped over the network to the real object on the server.\n";
-    out << "class " << spec.className << "Proxy : public " << spec.className << " {\n";
-    out << "    std::string serverIp;\n";
-    out << "    int serverPort;\n";
-    out << "public:\n";
-    out << "    void setReal(const std::string &ip, int port);\n";
-    for (auto &m : spec.methods) {
-        out << "    " << m.retType << " " << m.name << "(" << m.argType << ");\n";
+// ---------------------------------------------------------------------------
+// 2. Helpers shared by every generator
+// ---------------------------------------------------------------------------
+
+// "calculate:int:int" -- the protocol key both sides agree on.
+static std::string signature(const Method& m) {
+    std::string s = m.name + ":" + m.retType;
+    for (const std::string& t : m.argTypes) s += ":" + t;
+    return s;
+}
+
+// "int a1, std::string a2" -- parameter list with generated names a1..an.
+static std::string paramList(const Method& m) {
+    std::string s;
+    for (size_t i = 0; i < m.argTypes.size(); i++) {
+        if (i > 0) s += ", ";
+        s += m.argTypes[i] + " a" + std::to_string(i + 1);
     }
-    out << "};\n\n";
-    out << "#endif\n";
+    return s;
 }
 
-static void generateProxySource(const ServiceSpec &spec) {
-    std::ofstream out("proxy.cpp");
-    out << "// AUTO-GENERATED by tool.cpp from service.spec -- do not edit by hand\n";
-    out << "#include \"proxy.h\"\n";
-    out << "#include <arpa/inet.h>\n";
-    out << "#include <cstring>\n";
-    out << "#include <iostream>\n";
-    out << "#include <sstream>\n";
-    out << "#include <sys/socket.h>\n";
-    out << "#include <unistd.h>\n\n";
+static std::string banner(const std::string& specFile) {
+    return "// AUTO-GENERATED by tool.cpp from " + specFile + " -- do not edit by hand.\n"
+           "// Re-run ./tool " + specFile + " after changing the spec.\n";
+}
 
-    out << "void " << spec.className << "Proxy::setReal(const std::string &ip, int port) {\n";
-    out << "    serverIp = ip;\n";
-    out << "    serverPort = port;\n";
-    out << "}\n\n";
+// ---------------------------------------------------------------------------
+// 3. Client stub: <Service>_proxy.h / <Service>_proxy.cpp
+// ---------------------------------------------------------------------------
 
-    for (auto &m : spec.methods) {
-        out << m.retType << " " << spec.className << "Proxy::" << m.name << "(" << m.argType << " arg) {\n";
-        out << "    // 1. connect to the server that hosts the real object\n";
-        out << "    int sock = socket(AF_INET, SOCK_STREAM, 0);\n";
-        out << "    sockaddr_in addr{};\n";
-        out << "    addr.sin_family = AF_INET;\n";
-        out << "    addr.sin_port = htons(serverPort);\n";
-        out << "    inet_pton(AF_INET, serverIp.c_str(), &addr.sin_addr);\n";
-        out << "    if (connect(sock, (sockaddr*)&addr, sizeof(addr)) < 0) {\n";
-        out << "        std::cerr << \"" << spec.className << "Proxy: connect failed\" << std::endl;\n";
-        out << "        close(sock);\n";
-        out << "        return " << m.retType << "{};\n";
-        out << "    }\n\n";
-        out << "    // 2. marshal: turn the method name + args into a wire message\n";
-        out << "    std::ostringstream req;\n";
-        out << "    req << \"" << m.name << ":\" << arg << \"\\n\";\n";
-        out << "    std::string reqStr = req.str();\n";
-        out << "    send(sock, reqStr.c_str(), reqStr.size(), 0);\n\n";
-        out << "    // 3. unmarshal: read the result the server sends back\n";
-        out << "    char buffer[256] = {0};\n";
-        out << "    recv(sock, buffer, sizeof(buffer) - 1, 0);\n";
-        out << "    close(sock);\n\n";
-        out << "    return static_cast<" << m.retType << ">(atoi(buffer));\n";
-        out << "}\n\n";
+static void generateClientStub(const ServiceSpec& spec, const std::string& specFile) {
+    const std::string cls = spec.service + "Proxy";
+    const std::string base = spec.service + "_proxy";
+
+    // ---- header: the proxy has the same interface as the real object -------
+    std::ofstream h(base + ".h");
+    h << banner(specFile)
+      << "#ifndef " << spec.service << "_PROXY_H\n"
+      << "#define " << spec.service << "_PROXY_H\n\n"
+      << "#include \"" << spec.service << ".h\"   // the interface you write by hand\n\n"
+      << "#include <string>\n\n"
+      << "// Client stub. Use it wherever a " << spec.service << "* is expected; every call\n"
+      << "// goes to the server chosen with setRpcServer(ip, port) from rpc_client.h.\n"
+      << "class " << cls << " : public " << spec.service << " {\n"
+      << "public:\n";
+    for (const Method& m : spec.methods)
+        h << "    " << m.retType << " " << m.name << "(" << paramList(m) << ") override;\n";
+    h << "};\n\n#endif\n";
+
+    // ---- source: pack args in order -> Rpc(signature) -> unpack result -----
+    std::ofstream c(base + ".cpp");
+    c << banner(specFile)
+      << "#include \"" << base << ".h\"\n"
+      << "#include \"rpc_client.h\"\n";
+    for (const Method& m : spec.methods) {
+        c << "\n// " << signature(m) << "\n"
+          << m.retType << " " << cls << "::" << m.name << "(" << paramList(m) << ") {\n"
+          << "    Packet args;\n";
+        for (size_t i = 0; i < m.argTypes.size(); i++)
+            c << "    args.put(a" << i + 1 << ");\n";
+        if (m.retType == "void")
+            c << "    Rpc(\"" << signature(m) << "\", args);\n";
+        else
+            c << "    return Rpc(\"" << signature(m) << "\", args).get<" << m.retType << ">();\n";
+        c << "}\n";
     }
 }
 
-static void generateStuffHeader(const ServiceSpec &spec) {
-    std::ofstream out("stuff.h");
-    out << "// AUTO-GENERATED by tool.cpp from service.spec -- do not edit by hand\n";
-    out << "#ifndef " << spec.className << "_STUFF_H\n";
-    out << "#define " << spec.className << "_STUFF_H\n\n";
-    out << "#include \"" << spec.className << ".h\"\n\n";
-    out << "// Server-side skeleton/dispatcher. Given a REAL implementation object\n";
-    out << "// and a port, this listens forever, and for every incoming connection:\n";
-    out << "// reads the request, unmarshals it, calls the matching method on\n";
-    out << "// impl, marshals the result, and sends it back.\n";
-    out << "void serve_" << spec.className << "(" << spec.className << " *impl, int port);\n\n";
-    out << "#endif\n";
-}
+// ---------------------------------------------------------------------------
 
-static void generateStuffSource(const ServiceSpec &spec) {
-    std::ofstream out("stuff.cpp");
-    out << "// AUTO-GENERATED by tool.cpp from service.spec -- do not edit by hand\n";
-    out << "#include \"stuff.h\"\n";
-    out << "#include <arpa/inet.h>\n";
-    out << "#include <cstring>\n";
-    out << "#include <iostream>\n";
-    out << "#include <sstream>\n";
-    out << "#include <sys/socket.h>\n";
-    out << "#include <unistd.h>\n\n";
-
-    out << "void serve_" << spec.className << "(" << spec.className << " *impl, int port) {\n";
-    out << "    int serverSocket = socket(AF_INET, SOCK_STREAM, 0);\n";
-    out << "    int opt = 1;\n";
-    out << "    setsockopt(serverSocket, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));\n\n";
-    out << "    sockaddr_in addr{};\n";
-    out << "    addr.sin_family = AF_INET;\n";
-    out << "    addr.sin_port = htons(port);\n";
-    out << "    addr.sin_addr.s_addr = INADDR_ANY;\n\n";
-    out << "    bind(serverSocket, (sockaddr*)&addr, sizeof(addr));\n";
-    out << "    listen(serverSocket, 5);\n";
-    out << "    std::cout << \"" << spec.className << " server listening on port \" << port << std::endl;\n\n";
-    out << "    while (true) {\n";
-    out << "        int client = accept(serverSocket, nullptr, nullptr);\n";
-    out << "        if (client < 0) continue;\n\n";
-    out << "        char buffer[256] = {0};\n";
-    out << "        recv(client, buffer, sizeof(buffer) - 1, 0);\n";
-    out << "        std::string req(buffer);\n\n";
-    out << "        // unmarshal: split \"methodName:arg\"\n";
-    out << "        size_t colon = req.find(':');\n";
-    out << "        std::string methodName = req.substr(0, colon);\n";
-    out << "        int arg = atoi(req.substr(colon + 1).c_str());\n\n";
-    out << "        int result = 0;\n";
-    for (size_t i = 0; i < spec.methods.size(); ++i) {
-        auto &m = spec.methods[i];
-        out << "        " << (i == 0 ? "" : "else ") << "if (methodName == \"" << m.name << "\") {\n";
-        out << "            result = impl->" << m.name << "(arg);\n";
-        out << "        }\n";
-    }
-    out << "\n";
-    out << "        // marshal: send the result back as text\n";
-    out << "        std::ostringstream resp;\n";
-    out << "        resp << result;\n";
-    out << "        std::string respStr = resp.str();\n";
-    out << "        send(client, respStr.c_str(), respStr.size(), 0);\n\n";
-    out << "        close(client);\n";
-    out << "    }\n";
-    out << "}\n";
-}
-
-int main(int argc, char *argv[]) {
-    std::string specFile = "service.spec";
-    if (argc > 1) specFile = argv[1];
-
+int main(int argc, char* argv[]) {
+    std::string specFile = argc > 1 ? argv[1] : "service.spec";
     ServiceSpec spec = parseSpec(specFile);
-    if (spec.className.empty() || spec.methods.empty()) {
-        std::cerr << "tool: spec file missing 'service' or 'method' lines" << std::endl;
-        return 1;
-    }
 
-    generateProxyHeader(spec);
-    generateProxySource(spec);
-    generateStuffHeader(spec);
-    generateStuffSource(spec);
+    generateClientStub(spec, specFile);
 
-    std::cout << "tool: generated proxy.h, proxy.cpp, stuff.h, stuff.cpp for service '"
-              << spec.className << "' (port " << spec.port << ")" << std::endl;
+    std::cout << "tool: service " << spec.service << " (port " << spec.port << "), "
+              << spec.methods.size() << " method(s)\n";
+    for (const Method& m : spec.methods) std::cout << "  " << signature(m) << "\n";
+    std::cout << "tool: wrote " << spec.service << "_proxy.h, " << spec.service << "_proxy.cpp\n";
     return 0;
 }
