@@ -8,10 +8,24 @@ import numpy as np
 def standardNormal(shape: tuple = None):
     return np.random.standard_normal(shape)
 
+# A is a DxD square matrix, mean is a Dx1 vector, N is the number of samples
+def gaussianRandomVar(mean: np.ndarray, A: np.ndarray, N: int):
+    assert mean.ndim == 1
+    assert A.shape[0] == mean.shape[0]
+    shape = (mean.shape[0], N)
+    W = standardNormal(shape)
+    X = A @ W + mean[:, np.newaxis]
+    return X
+
+
 if __name__ == "__main__":
     # generate a 2D dataset of 100 samples
     N = 100
     D = 2
     X = standardNormal((D, N))
-    print("X.shape = ", X.shape)
-    print("X = ", X)
+
+    A = np.identity(D)
+    mean = np.array([3,4])
+    X = gaussianRandomVar(mean, A, N)
+    print(X.shape)
+    print("X : ", X)
